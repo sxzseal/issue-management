@@ -34,6 +34,24 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   baseURL?: string
 }
 
+/**
+ * Injection points for cross-cutting concerns (auth token, 401 handling).
+ *
+ * Kept as module-scoped setters so `src/lib/request.ts` avoids depending on
+ * higher layers (features). Configured from `src/features/auth/auth-store.ts`
+ * at module-load time.
+ */
+let tokenProvider: (() => string | null) | null = null
+let onUnauthorized: (() => void) | null = null
+
+export function configureRequest(config: {
+  tokenProvider?: () => string | null
+  onUnauthorized?: () => void
+}): void {
+  if (config.tokenProvider) tokenProvider = config.tokenProvider
+  if (config.onUnauthorized) onUnauthorized = config.onUnauthorized
+}
+
 function buildURL(path: string, query?: RequestOptions['query'], baseURL?: string): string {
   const base = baseURL ?? (typeof window === 'undefined' ? 'http://localhost' : window.location.origin)
   const url = new URL(path, base)
@@ -52,12 +70,17 @@ function buildURL(path: string, query?: RequestOptions['query'], baseURL?: strin
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { query, body, baseURL, headers, ...rest } = options
+  const mergedHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(headers as Record<string, string> | undefined),
+  }
+  const token = tokenProvider?.()
+  if (token && !('Authorization' in mergedHeaders) && !('authorization' in mergedHeaders)) {
+    mergedHeaders.Authorization = `Bearer ${token}`
+  }
   const init: RequestInit = {
     ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: mergedHeaders,
   }
   if (body !== undefined) {
     init.body = typeof body === 'string' ? body : JSON.stringify(body)
@@ -66,6 +89,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const response = await fetch(buildURL(path, query, baseURL), init)
 
   if (response.status === 401) {
+    onUnauthorized?.()
     throw new UnauthorizedError()
   }
 
