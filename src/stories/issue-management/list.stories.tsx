@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * L3 · issue-management / 列表视图
  *
@@ -14,7 +12,7 @@
  */
 
 import * as React from 'react'
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import type { Meta, StoryObj } from '@storybook/react'
 import {
   ArrowUpDown,
   ArrowUp,

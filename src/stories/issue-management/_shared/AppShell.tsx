@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * L2 · issue-management 项目应用外壳
  *

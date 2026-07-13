@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * issue-management / 看板视图（board）
  *
@@ -7,7 +5,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import type { Meta, StoryObj } from '@storybook/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
