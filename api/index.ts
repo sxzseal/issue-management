@@ -13,6 +13,7 @@ export type Env = {
   JWT_SECRET: string
   WEBHOOK_SECRET: string
   APP_URL: string
+  APP_PASSWORD: string
   CORS_EXTRA_ORIGINS?: string
   LOG_LEVEL?: 'debug' | 'info' | 'warn' | 'error'
 }
