@@ -1,0 +1,3 @@
+# ai-forge version pin (used by scripts/upgrade.sh)
+forge_sha=ee55b8d
+scaffolded_at=2026-07-13T03:42:56Z

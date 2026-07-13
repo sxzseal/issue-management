@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-forge.dev/schemas/prd-state.json",
+  "title": "PRD Phase State",
+  "description": "Cross-session polish state for /dev-prd. Written to .loop/prd/state.json. Main skill owns this file; subagents MUST NOT touch.",
+  "type": "object",
+  "required": ["status", "iterations", "userConfirmedDone"],
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["researching", "scoping", "drafting", "polishing", "done"],
+      "description": "Current stage. researching: Step 1.5 GH+Web scan. scoping: Step 1.6 user scope confirmation. drafting: Step 2-2.5 initial 3-view fan-out + synthesis. polishing: Step 5.5 refinement loop. done: user has confirmed 定稿."
+    },
+    "iterations": {
+      "type": "array",
+      "description": "Every polish round appends an entry. Initial synthesis counts as iteration 0.",
+      "items": {
+        "type": "object",
+        "required": ["ts", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "ts": { "type": "string", "format": "date-time" },
+          "kind": {
+            "type": "string",
+            "enum": ["initial", "refine-section", "refine-view", "refine-all"],
+            "description": "initial: first synthesis. refine-section: user targeted one PRD section. refine-view: user targeted one of the 3 views. refine-all: full re-synthesis."
+          },
+          "userFeedback": {
+            "type": "string",
+            "description": "Verbatim user feedback text that triggered this iteration"
+          },
+          "sections": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "PRD sections touched (e.g. '## 用户价值', '## 商业闭环')"
+          },
+          "changesSummary": {
+            "type": "string",
+            "description": "One-line summary of what changed"
+          }
+        }
+      }
+    },
+    "lockedSections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "PRD sections the user has confirmed final; polish rounds MUST NOT touch these"
+    },
+    "userConfirmedDone": {
+      "type": "boolean",
+      "description": "Only true after user explicitly says 定稿. Setting true is the trigger to advance currentPhase to 'prototype'."
+    },
+    "researchBriefPath": {
+      "type": "string",
+      "description": "Path to .loop/prd/research-brief.md if Step 1.5 succeeded"
+    },
+    "scopeConfirmedPath": {
+      "type": "string",
+      "description": "Path to .loop/prd/scope-confirmed.md if Step 1.6 completed"
+    }
+  }
+}

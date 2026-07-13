@@ -1,0 +1,21 @@
+{
+  "Meta": {
+    "title": "issue-management",
+    "description": "Built with ai-forge"
+  },
+  "Home": {
+    "title": "issue-management",
+    "subtitle": "Built with ai-forge",
+    "apiHealth": "API Health",
+    "storybook": "Storybook"
+  },
+  "ThemeToggle": {
+    "label": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "LocaleSwitcher": {
+    "label": "Switch language"
+  }
+}
