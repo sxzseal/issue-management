@@ -1,19 +1,10 @@
-import type { Preview } from '@storybook/nextjs-vite'
-import '../src/app/globals.css'
-import { createElement } from 'react'
+import type { Preview } from '@storybook/react-vite'
+import '../src/styles/globals.css'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 import { withThemeByClassName } from '@storybook/addon-themes'
-import { NextIntlClientProvider } from 'next-intl'
 import { visualFeedbackDecorator } from './visual-feedback/overlay'
-import zhCN from '../messages/zh-CN.json'
-import en from '../messages/en.json'
 
 initialize()
-
-const messagesByLocale: Record<string, Record<string, unknown>> = {
-  'zh-CN': zhCN,
-  en,
-}
 
 const viewports = {
   mobile: {
@@ -45,21 +36,6 @@ const viewports = {
 
 const preview: Preview = {
   loaders: [mswLoader],
-  globalTypes: {
-    locale: {
-      name: 'Locale',
-      description: 'Active language for i18n',
-      defaultValue: 'zh-CN',
-      toolbar: {
-        icon: 'globe',
-        items: [
-          { value: 'zh-CN', title: '中文' },
-          { value: 'en', title: 'English' },
-        ],
-        dynamicTitle: true,
-      },
-    },
-  },
   parameters: {
     controls: { expanded: true },
     layout: 'centered',
@@ -73,15 +49,6 @@ const preview: Preview = {
       themes: { light: '', dark: 'dark' },
       defaultTheme: 'light',
     }),
-    (Story, ctx) => {
-      const locale = (ctx.globals.locale as string) ?? 'zh-CN'
-      const messages = messagesByLocale[locale] ?? zhCN
-      return createElement(
-        NextIntlClientProvider,
-        { locale, messages },
-        createElement(Story),
-      )
-    },
     visualFeedbackDecorator,
   ],
 }

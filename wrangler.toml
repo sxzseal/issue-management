@@ -1,0 +1,35 @@
+name = "issue-management"
+main = "api/index.ts"
+compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_URL = "http://localhost:5173"
+
+# Local development bindings; production uses `wrangler secret put` for secrets.
+[dev]
+port = 8787
+local_protocol = "http"
+
+# D1 database binding (uncomment + fill after `wrangler d1 create issue_management`)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "issue_management"
+# database_id = "REPLACE_WITH_UUID"
+
+# R2 bucket binding (uncomment + fill after `wrangler r2 bucket create issue-attachments`)
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "issue-attachments"
+
+# KV namespace binding (uncomment + fill after `wrangler kv namespace create issue_kv`)
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "REPLACE_WITH_ID"
+
+# Assets binding for serving the built Vite output alongside the Worker
+# Set after `npm run build` produces dist/
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"

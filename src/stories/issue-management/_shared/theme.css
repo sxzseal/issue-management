@@ -1,0 +1,49 @@
+/**
+ * issue-management 项目主题覆写
+ *
+ * 只覆写项目特有 token（品牌蓝 + 语义化状态色），其他全部继承全局。
+ * 使用 HSL 格式与项目 tailwind.config 保持兼容（`hsl(var(--primary))`）。
+ *
+ * 主 skill 建议用 oklch，本项目沿用 HSL 是与 tailwind config 的兼容取舍。
+ */
+
+.theme-issue-management {
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 221 83% 53%;
+
+  --accent: 221 60% 96%;
+  --accent-foreground: 221 83% 30%;
+
+  --radius: 0.5rem;
+
+  --priority-p0: 0 84% 55%;
+  --priority-p1: 25 95% 53%;
+  --priority-p2: 221 83% 53%;
+  --priority-p3: 220 9% 60%;
+
+  --status-todo: 220 9% 55%;
+  --status-in-progress: 221 83% 53%;
+  --status-done: 142 71% 45%;
+  --status-archived: 220 9% 70%;
+}
+
+.theme-issue-management.dark,
+.dark .theme-issue-management {
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 217 91% 60%;
+
+  --accent: 221 40% 20%;
+  --accent-foreground: 221 90% 85%;
+
+  --priority-p0: 0 74% 62%;
+  --priority-p1: 25 90% 60%;
+  --priority-p2: 217 91% 68%;
+  --priority-p3: 220 9% 55%;
+
+  --status-todo: 220 9% 60%;
+  --status-in-progress: 217 91% 60%;
+  --status-done: 142 60% 55%;
+  --status-archived: 220 9% 45%;
+}

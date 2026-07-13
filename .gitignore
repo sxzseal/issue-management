@@ -45,3 +45,6 @@ next-env.d.ts
 # MSW — DO NOT ignore public/mockServiceWorker.js
 # The Storybook + MSW mock worker MUST be committed so cloned projects work
 # out of the box. If missing, run: pnpm run msw:init
+
+# Vite build output
+dist/

@@ -1,16 +1,18 @@
-'use client'
-
 import { Moon, Sun, Monitor } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 
 const ORDER = ['light', 'dark', 'system'] as const
 type ThemeMode = (typeof ORDER)[number]
 
+const LABELS: Record<ThemeMode, string> = {
+  light: '亮色',
+  dark: '暗色',
+  system: '跟随系统',
+}
+
 export function ThemeToggle() {
-  const t = useTranslations('ThemeToggle')
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -25,8 +27,8 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="icon"
-      aria-label={t('label')}
-      title={t(current)}
+      aria-label="切换主题"
+      title={LABELS[current]}
       onClick={() => setTheme(nextTheme)}
     >
       <Icon className="h-4 w-4" />

@@ -3,7 +3,9 @@ import type { Config } from 'tailwindcss'
 const config: Config = {
   darkMode: ['class'],
   content: [
+    './index.html',
     './src/**/*.{ts,tsx}',
+    './mocks/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {
@@ -40,6 +42,18 @@ const config: Config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        priority: {
+          p0: 'hsl(var(--priority-p0))',
+          p1: 'hsl(var(--priority-p1))',
+          p2: 'hsl(var(--priority-p2))',
+          p3: 'hsl(var(--priority-p3))',
+        },
+        status: {
+          todo: 'hsl(var(--status-todo))',
+          'in-progress': 'hsl(var(--status-in-progress))',
+          done: 'hsl(var(--status-done))',
+          archived: 'hsl(var(--status-archived))',
         },
       },
       borderRadius: {
