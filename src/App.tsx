@@ -1,25 +1,75 @@
-import { BrowserRouter, Route, Routes } from 'react-router'
+import type { ReactNode } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { AppShell } from './components/app-shell'
+import { OfflineBanner } from './components/offline-banner'
+import { useAuthGuard } from './hooks/use-auth-guard'
 import { Providers } from './providers'
 
-function Placeholder() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight">Issue 管理平台</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Vite + Cloudflare skeleton — 待接后续 route
-        </p>
-      </div>
-    </main>
-  )
+import BoardRoute from './routes/board.route'
+import IssueDetailRoute from './routes/issue-detail.route'
+import ListRoute from './routes/list.route'
+import LoginRoute from './routes/login.route'
+import NotFoundRoute from './routes/not-found.route'
+import WebhookSettingsRoute from './routes/webhook-settings.route'
+
+/**
+ * Wraps guarded routes with auth guard + AppShell chrome. The guard runs
+ * every route change; on unauthenticated state it navigates to /login with
+ * `?next=<current>` so the redirect returns the user where they were.
+ */
+function GuardedShell({ children }: { children: ReactNode }) {
+  useAuthGuard()
+  return <AppShell>{children}</AppShell>
 }
 
 export default function App() {
   return (
     <Providers>
       <BrowserRouter>
+        <OfflineBanner />
         <Routes>
-          <Route path="/*" element={<Placeholder />} />
+          <Route path="/" element={<Navigate to="/board" replace />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route
+            path="/board"
+            element={
+              <GuardedShell>
+                <BoardRoute />
+              </GuardedShell>
+            }
+          />
+          <Route
+            path="/list"
+            element={
+              <GuardedShell>
+                <ListRoute />
+              </GuardedShell>
+            }
+          />
+          <Route
+            path="/issue/:id"
+            element={
+              <GuardedShell>
+                <IssueDetailRoute />
+              </GuardedShell>
+            }
+          />
+          <Route
+            path="/settings/webhook"
+            element={
+              <GuardedShell>
+                <WebhookSettingsRoute />
+              </GuardedShell>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <GuardedShell>
+                <NotFoundRoute />
+              </GuardedShell>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </Providers>
