@@ -1,15 +1,21 @@
 /**
- * FilterBar — project / status / priority chips + debounced search + clear-all.
+ * FilterBar — project / status / priority dropdown menus + debounced search + clear-all.
  *
  * Reads params & actions from ListView (T019's useListParams). Debounced
  * search uses a named hook so no bare useEffect lives in the component body.
  */
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { queryOptions } from '@tanstack/react-query'
-import { Search, X } from 'lucide-react'
+import { ChevronDown, Check, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { request } from '@/lib/request'
 import type { Project, IssueStatus, IssuePriority } from '@/lib/api-types'
 import { cn } from '@/lib/utils'
@@ -29,6 +35,7 @@ const projectsQuery = queryOptions({
 interface FilterBarProps {
   params: ListParams
   actions: ListParamActions
+  onCreateIssue: () => void
 }
 
 /**
@@ -67,52 +74,61 @@ function useSyncSearchTerm(local: string, actions: ListParamActions): void {
   }, [debounced])
 }
 
-interface ChipProps {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-  ariaLabel?: string
-}
-
-function Chip({ active, onClick, children, ariaLabel }: ChipProps) {
-  return (
-    <Button
-      type="button"
-      variant={active ? 'default' : 'outline'}
-      size="sm"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={ariaLabel}
-      className="h-8"
-    >
-      {children}
-      {active && <X className="ml-1 h-3 w-3" aria-hidden />}
-    </Button>
-  )
-}
-
 function toggleArray<T>(arr: readonly T[] | undefined, value: T): T[] {
   const list = arr ?? []
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
 }
 
-export function FilterBar({ params, actions }: FilterBarProps) {
+interface FilterTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string
+  count?: number
+  hasValue: boolean
+}
+
+const FilterTrigger = forwardRef<HTMLButtonElement, FilterTriggerProps>(
+  ({ label, count, hasValue, className, ...props }, ref) => (
+    <Button
+      ref={ref}
+      type="button"
+      variant="outline"
+      size="sm"
+      className={cn(
+        'h-8 gap-1.5',
+        hasValue && 'border-primary/60 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary',
+        className
+      )}
+      {...props}
+    >
+      <span>{label}</span>
+      {count !== undefined && count > 0 && (
+        <span className="rounded-full bg-primary/15 px-1.5 text-xs font-medium leading-4 text-primary">
+          {count}
+        </span>
+      )}
+      <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden />
+    </Button>
+  )
+)
+FilterTrigger.displayName = 'FilterTrigger'
+
+export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
   const [localQ, setLocalQ] = useState(params.q ?? '')
   useSyncSearchTerm(localQ, actions)
 
   const { data: projects } = useQuery(projectsQuery)
 
+  const statusCount = params.status?.length ?? 0
+  const priorityCount = params.priority?.length ?? 0
+  const activeProject = projects?.find((p) => p.id === params.project_id)
+
   const hasActiveFilter =
     Boolean(params.project_id) ||
-    (params.status?.length ?? 0) > 0 ||
-    (params.priority?.length ?? 0) > 0 ||
+    statusCount > 0 ||
+    priorityCount > 0 ||
     Boolean(params.q)
 
-  const toggleProject = (id: string) => {
-    actions.setFilter({
-      project_id: params.project_id === id ? undefined : id,
-      page: 1,
-    })
+  const setProject = (id: string | undefined) => {
+    actions.setFilter({ project_id: id, page: 1 })
   }
   const toggleStatus = (s: IssueStatus) => {
     const next = toggleArray(params.status, s)
@@ -127,56 +143,11 @@ export function FilterBar({ params, actions }: FilterBarProps) {
     actions.clear()
   }
 
+  const projectLabel = activeProject ? `项目：${activeProject.name}` : '项目'
+
   return (
     <div className="flex-none flex flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-3">
-      {projects && projects.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {projects.map((p) => {
-            const active = params.project_id === p.id
-            return (
-              <Chip
-                key={p.id}
-                active={active}
-                onClick={() => toggleProject(p.id)}
-                ariaLabel={`项目：${p.name}`}
-              >
-                <span
-                  aria-hidden
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: p.color }}
-                />
-                <span className="max-w-[8rem] truncate">{p.name}</span>
-              </Chip>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-1.5">
-        {STATUS_OPTIONS.map((s) => (
-          <Chip
-            key={s}
-            active={params.status?.includes(s) ?? false}
-            onClick={() => toggleStatus(s)}
-          >
-            {STATUS_LABEL[s]}
-          </Chip>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-1.5">
-        {PRIORITY_OPTIONS.map((p) => (
-          <Chip
-            key={p}
-            active={params.priority?.includes(p) ?? false}
-            onClick={() => togglePriority(p)}
-          >
-            {PRIORITY_LABEL[p]}
-          </Chip>
-        ))}
-      </div>
-
-      <div className={cn('relative ml-auto flex-1 min-w-0 max-w-xs')}>
+      <div className="relative w-full sm:w-64 shrink-0">
         <Search
           className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
           aria-hidden
@@ -191,15 +162,131 @@ export function FilterBar({ params, actions }: FilterBarProps) {
         />
       </div>
 
-      {hasActiveFilter && (
-        <button
-          type="button"
-          onClick={handleClearAll}
-          className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
-        >
-          清除全部
-        </button>
+      {projects && projects.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <FilterTrigger
+              label={projectLabel}
+              hasValue={Boolean(activeProject)}
+              aria-label="按项目筛选"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[12rem]">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault()
+                setProject(undefined)
+              }}
+              className="justify-between"
+            >
+              <span>全部项目</span>
+              {!activeProject && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+            </DropdownMenuItem>
+            {projects.map((p) => {
+              const selected = params.project_id === p.id
+              return (
+                <DropdownMenuItem
+                  key={p.id}
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setProject(selected ? undefined : p.id)
+                  }}
+                  className="justify-between"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: p.color }}
+                    />
+                    <span className="truncate">{p.name}</span>
+                  </span>
+                  {selected && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+                </DropdownMenuItem>
+              )
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <FilterTrigger
+            label="状态"
+            count={statusCount}
+            hasValue={statusCount > 0}
+            aria-label="按状态筛选"
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[10rem]">
+          {STATUS_OPTIONS.map((s) => {
+            const selected = params.status?.includes(s) ?? false
+            return (
+              <DropdownMenuItem
+                key={s}
+                onSelect={(e) => {
+                  e.preventDefault()
+                  toggleStatus(s)
+                }}
+                className="justify-between"
+              >
+                <span>{STATUS_LABEL[s]}</span>
+                {selected && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <FilterTrigger
+            label="优先级"
+            count={priorityCount}
+            hasValue={priorityCount > 0}
+            aria-label="按优先级筛选"
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-[10rem]">
+          {PRIORITY_OPTIONS.map((p) => {
+            const selected = params.priority?.includes(p) ?? false
+            return (
+              <DropdownMenuItem
+                key={p}
+                onSelect={(e) => {
+                  e.preventDefault()
+                  togglePriority(p)
+                }}
+                className="justify-between"
+              >
+                <span>{PRIORITY_LABEL[p]}</span>
+                {selected && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+              </DropdownMenuItem>
+            )
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={handleClearAll}
+        disabled={!hasActiveFilter}
+        className="h-8 text-muted-foreground hover:text-foreground"
+      >
+        重置
+      </Button>
+
+      <Button
+        type="button"
+        size="sm"
+        onClick={onCreateIssue}
+        className="ml-auto h-8 gap-1.5"
+      >
+        <Plus className="h-4 w-4" aria-hidden />
+        新建issue
+      </Button>
     </div>
   )
 }

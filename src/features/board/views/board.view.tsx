@@ -4,6 +4,7 @@
  * Global `N` key opens the create modal (AC-011).
  */
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 
@@ -29,8 +30,18 @@ interface StatusSheetState {
 
 export function BoardView() {
   const { data, isPending, isError, refetch } = useQuery(boardQueries.overview())
+  const [searchParams, setSearchParams] = useSearchParams()
   const [creating, setCreating] = useState<CreatingState>({ open: false })
   const [statusSheet, setStatusSheet] = useState<StatusSheetState>({ open: false })
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreating({ open: true })
+      const next = new URLSearchParams(searchParams)
+      next.delete('new')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -70,7 +81,7 @@ export function BoardView() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       <header className="flex flex-none items-center justify-between border-b border-border px-6 py-3">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold">看板</h1>
+          <h1 className="text-lg font-semibold">issue总览</h1>
           {data ? (
             <Badge variant="outline" className="h-6 gap-1 font-normal">
               共 {data.total} 条
@@ -79,10 +90,7 @@ export function BoardView() {
         </div>
         <Button onClick={() => setCreating({ open: true })}>
           <Plus className="mr-1 h-4 w-4" />
-          新建
-          <kbd className="ml-2 rounded border border-input bg-muted px-1 text-xs">
-            N
-          </kbd>
+          新建issue
         </Button>
       </header>
 

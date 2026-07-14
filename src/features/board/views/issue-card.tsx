@@ -1,10 +1,11 @@
 /**
  * Board issue card — priority chip + title + meta row (project, labels, due, source).
- * Clicking title (or the priority chip) opens the status select sheet (AC-023).
+ * Priority chip opens the status select sheet (AC-023). Whole card navigates to
+ * /issue/:id; the priority chip stops propagation so its click doesn't navigate.
  */
-import { Calendar, MoreHorizontal, Webhook } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { Calendar, Webhook } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -70,16 +71,52 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
   const remaining = labels.length - shownLabels.length
   const overdue = issue.due_date ? isOverdue(issue.due_date) : false
   const today = issue.due_date ? isToday(issue.due_date) : false
+  const navigate = useNavigate()
+
+  const openDetail = () => {
+    void navigate(`/issue/${issue.id}`)
+  }
 
   return (
     <div
       className={cn(
-        'group relative flex flex-col gap-2 rounded-md border border-border bg-background p-3 min-w-0',
-        'transition-shadow hover:bg-accent/50 hover:shadow-sm focus-within:ring-2 focus-within:ring-ring',
+        'group relative flex cursor-pointer flex-col gap-2 rounded-md border border-border bg-background p-3 min-w-0',
+        'transition-colors duration-200 ease-out hover:bg-accent/50',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
-      role="article"
+      role="button"
+      tabIndex={0}
       aria-label={`issue: ${issue.title}`}
+      onClick={openDetail}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          openDetail()
+        }
+      }}
     >
+      {issue.source === 'webhook' ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className={cn(
+                  'absolute right-2 top-2 z-10 inline-flex h-5 w-5 items-center justify-center',
+                  'rounded-full bg-primary text-primary-foreground shadow-sm',
+                  'ring-2 ring-background',
+                )}
+                aria-label={`来自 webhook：${issue.source_name ?? 'webhook'}`}
+              >
+                <Webhook className="h-3 w-3" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="text-xs">
+              来源：{issue.source_name ?? 'webhook'}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null}
+
       <div className="flex items-start justify-between gap-2 min-w-0">
         <button
           type="button"
@@ -97,25 +134,11 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         >
           {issue.priority.toUpperCase()}
         </button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-          aria-label="更多操作"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreHorizontal className="h-3.5 w-3.5" />
-        </Button>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpenStatus(issue)}
-        className="text-left text-sm font-medium leading-snug line-clamp-2 break-words focus:outline-none focus-visible:underline"
-      >
+      <div className="text-left text-sm font-medium leading-snug line-clamp-2 break-words">
         {issue.title}
-      </button>
+      </div>
 
       <div className="flex flex-wrap items-center gap-1.5 min-w-0">
         <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground min-w-0 max-w-[8rem]">
@@ -157,24 +180,6 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
             <Calendar className="h-3 w-3" />
             {formatDue(issue.due_date)}
           </Badge>
-        ) : null}
-
-        {issue.source === 'webhook' ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground"
-                  aria-label="来自 webhook"
-                >
-                  <Webhook className="h-3.5 w-3.5" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                来源：{issue.source_name ?? 'webhook'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         ) : null}
       </div>
     </div>

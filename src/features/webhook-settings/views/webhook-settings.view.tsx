@@ -8,7 +8,6 @@
  */
 import { useQuery } from '@tanstack/react-query'
 
-import { PageHeader } from '@/features/_shared/page'
 import { ErrorState, Loading } from '@/features/_shared/state'
 
 import { webhookSettingsQueries } from '../queries'
@@ -27,10 +26,6 @@ export function WebhookSettingsView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <PageHeader
-        title="Webhook 设置"
-        description="外部系统通过 webhook 推送 issue 到平台"
-      />
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
           <IntroCard />

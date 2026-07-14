@@ -3,7 +3,7 @@
  * 顶部为功能入口；下方是从 /api/projects 拉取的项目列表，含「管理」入口。
  */
 import { useState } from 'react'
-import { NavLink } from 'react-router'
+import { NavLink, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   Inbox,
@@ -11,15 +11,12 @@ import {
   ListOrdered,
   Loader2,
   Settings2,
-  Tag,
   Webhook,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { projectsQueryOptions } from '@/features/projects/queries'
 import { ProjectManageDialog } from '@/features/projects/views/project-manage.dialog'
-import { labelsQueryOptions } from '@/features/labels/queries'
-import { LabelManageDialog } from '@/features/labels/views/label-manage.dialog'
 
 interface NavItemProps {
   to: string
@@ -54,25 +51,40 @@ interface ColoredNavRowProps {
   to: string
   color: string
   name: string
+  paramKey: 'project_id' | 'labels'
+  paramValue: string
 }
 
 /**
  * Shared row for the projects / labels sidebar lists: a colored dot + name +
  * active/hover ring. Both lists used to inline this markup verbatim.
+ *
+ * NavLink's default isActive only compares pathname — every item points at
+ * `/list?...`, so a naive check lights up all of them at once. We compute
+ * active state from the current URL's query params instead.
  */
-function ColoredNavRow({ to, color, name }: ColoredNavRowProps) {
+function ColoredNavRow({ to, color, name, paramKey, paramValue }: ColoredNavRowProps) {
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const raw = params.get(paramKey) ?? ''
+  const isActive =
+    location.pathname === '/list' &&
+    (paramKey === 'labels'
+      ? raw
+          .split(',')
+          .map((s) => s.trim())
+          .includes(paramValue)
+      : raw === paramValue)
   return (
     <li>
       <NavLink
         to={to}
-        className={({ isActive }) =>
-          cn(
-            'flex items-center gap-2 rounded px-3 py-1.5 text-sm text-foreground transition-colors',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            isActive && 'bg-accent font-medium text-accent-foreground'
-          )
-        }
+        className={cn(
+          'flex items-center gap-2 rounded px-3 py-1.5 text-sm text-foreground transition-colors',
+          'hover:bg-accent hover:text-accent-foreground',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          isActive && 'bg-accent font-medium text-accent-foreground'
+        )}
       >
         <span
           aria-hidden
@@ -87,9 +99,7 @@ function ColoredNavRow({ to, color, name }: ColoredNavRowProps) {
 
 export function SideNav() {
   const [projectManageOpen, setProjectManageOpen] = useState(false)
-  const [labelManageOpen, setLabelManageOpen] = useState(false)
   const projects = useQuery(projectsQueryOptions)
-  const labels = useQuery(labelsQueryOptions)
 
   return (
     <nav
@@ -146,56 +156,14 @@ export function SideNav() {
                 to={`/list?project_id=${encodeURIComponent(p.id)}`}
                 color={p.color}
                 name={p.name}
-              />
-            ))}
-          </ul>
-        )}
-
-        <div className="mt-4 flex items-center justify-between px-3 pb-2 pt-3">
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <Tag className="h-3.5 w-3.5" aria-hidden />
-            <span>标签</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setLabelManageOpen(true)}
-            className={cn(
-              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors',
-              'hover:bg-accent hover:text-accent-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            )}
-            aria-label="管理标签"
-          >
-            <Settings2 className="h-3.5 w-3.5" aria-hidden />
-            管理
-          </button>
-        </div>
-        {labels.isLoading ? (
-          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-            加载中…
-          </div>
-        ) : (labels.data ?? []).length === 0 ? (
-          <p className="px-3 py-2 text-xs text-muted-foreground">暂无标签</p>
-        ) : (
-          <ul className="flex flex-col gap-0.5">
-            {(labels.data ?? []).map((l) => (
-              <ColoredNavRow
-                key={l.id}
-                to={`/list?labels=${encodeURIComponent(l.id)}`}
-                color={l.color}
-                name={l.name}
+                paramKey="project_id"
+                paramValue={p.id}
               />
             ))}
           </ul>
         )}
       </div>
-      <div className="flex-none border-t border-border p-3 text-xs text-muted-foreground">
-        v1 · 单人个人产品
-      </div>
-
       <ProjectManageDialog open={projectManageOpen} onOpenChange={setProjectManageOpen} />
-      <LabelManageDialog open={labelManageOpen} onOpenChange={setLabelManageOpen} />
     </nav>
   )
 }

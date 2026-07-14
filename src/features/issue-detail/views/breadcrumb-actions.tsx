@@ -9,7 +9,7 @@
  * the confirmation modal.
  */
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Check, Link as LinkIcon, Package, PackageOpen, Trash2 } from 'lucide-react'
 
@@ -31,12 +31,21 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
   const { copied, copy } = useCopyToClipboard()
   const update = useUpdateIssueMutation()
   const { data: projects } = useQuery(projectsQueryOptions)
+  const navigate = useNavigate()
 
   const project = projects?.find((p) => p.id === issue.project_id)
   const archived = issue.status === 'archived'
 
   const copyLink = () => {
     void copy(window.location.href, '链接已复制')
+  }
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      void navigate('/list')
+    }
   }
 
   const toggleArchive = () => {
@@ -49,15 +58,14 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
   return (
     <div className="flex h-12 flex-none items-center gap-2 border-b border-border bg-card/40 px-4">
       <Button
-        asChild
         variant="ghost"
         size="sm"
         className="-ml-2 h-8 gap-1 text-muted-foreground hover:text-foreground"
+        onClick={goBack}
+        aria-label="返回"
       >
-        <Link to="/list">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">返回列表</span>
-        </Link>
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">返回</span>
       </Button>
       <Separator orientation="vertical" className="h-5" />
       <nav aria-label="面包屑" className="min-w-0 truncate text-sm text-muted-foreground">

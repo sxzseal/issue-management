@@ -1,15 +1,24 @@
 /**
  * IntroCard — /settings/webhook 页顶部信息卡（AC-071）
  *
- * 静态卡片：简介 + 文档链接（v1 占位 `#docs`）。
+ * 「查看示例」按钮滚动到本页的 ExamplesCard；不再外链占位文档。
  */
-import { ExternalLink, Webhook } from 'lucide-react'
+import { ArrowDown, Webhook } from 'lucide-react'
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+
+export const EXAMPLES_SECTION_ID = 'webhook-examples'
+
+function scrollToExamples() {
+  const el = document.getElementById(EXAMPLES_SECTION_ID)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
 
 export function IntroCard() {
   return (
@@ -25,13 +34,14 @@ export function IntroCard() {
               让 Claude Code / CI 脚本 / 开发环境无摩擦推入 issue
             </CardDescription>
           </div>
-          <a
-            href="#docs"
-            className="inline-flex shrink-0 items-center gap-1 text-sm text-primary hover:underline"
+          <button
+            type="button"
+            onClick={scrollToExamples}
+            className="inline-flex shrink-0 items-center gap-1 rounded text-sm text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            查看文档
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+            查看示例
+            <ArrowDown className="h-3.5 w-3.5" />
+          </button>
         </div>
       </CardHeader>
     </Card>

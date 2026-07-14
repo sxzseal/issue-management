@@ -67,9 +67,9 @@ export function IssueTable({ className, issues, params, actions }: IssueTablePro
     <div className={cn('flex flex-1 min-h-0 flex-col overflow-hidden', className)}>
       <div className="flex-1 overflow-auto">
         <Table className="table-fixed">
-          <TableHeader className="sticky top-0 z-20 bg-background shadow-[0_1px_0_0_hsl(var(--border))]">
-            <TableRow>
-              <TableHead className="w-[40%] text-xs font-medium text-muted-foreground">
+          <TableHeader className="sticky top-0 z-20 bg-muted/50 shadow-[0_1px_0_0_hsl(var(--border))] [&_tr]:hover:bg-transparent">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[38%] text-xs font-medium text-muted-foreground">
                 标题
               </TableHead>
               <TableHead className="w-[10%] text-xs font-medium text-muted-foreground">
@@ -85,7 +85,7 @@ export function IssueTable({ className, issues, params, actions }: IssueTablePro
                 onSortClick={actions.setSort}
                 className="w-[8%]"
               />
-              <TableHead className="hidden lg:table-cell w-[18%] text-xs font-medium text-muted-foreground">
+              <TableHead className="hidden lg:table-cell w-[16%] text-xs font-medium text-muted-foreground">
                 标签
               </TableHead>
               <SortHeader
@@ -100,9 +100,11 @@ export function IssueTable({ className, issues, params, actions }: IssueTablePro
                 label="更新时间"
                 params={params}
                 onSortClick={actions.setSort}
-                className="hidden lg:table-cell w-[14%]"
+                className="hidden lg:table-cell w-[12%]"
               />
-              <TableHead className="w-10" />
+              <TableHead className="sticky right-0 z-30 w-[88px] bg-muted/50 pr-4 text-center text-xs font-medium text-muted-foreground shadow-[inset_1px_0_0_0_hsl(var(--border))]">
+                操作
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

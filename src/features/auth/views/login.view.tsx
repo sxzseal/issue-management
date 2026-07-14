@@ -200,7 +200,7 @@ export function LoginView() {
 
           <div className="px-6 pb-6 pt-2">
             <p className="text-center text-xs text-muted-foreground">
-              v1 · 单人个人产品
+              AI Native Issue 管理平台
             </p>
           </div>
         </div>

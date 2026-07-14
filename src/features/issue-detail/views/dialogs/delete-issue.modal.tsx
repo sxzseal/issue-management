@@ -32,7 +32,11 @@ export function DeleteIssueModal({ issueId, open, onOpenChange }: DeleteIssueMod
     del.mutate(issueId, {
       onSuccess: () => {
         onOpenChange(false)
-        navigate('/list', { replace: true })
+        if (window.history.length > 1) {
+          navigate(-1)
+        } else {
+          void navigate('/list', { replace: true })
+        }
       },
     })
   }

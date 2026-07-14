@@ -11,21 +11,24 @@ APP_URL = "http://localhost:5173"
 port = 8787
 local_protocol = "http"
 
-# D1 database binding (uncomment + fill after `wrangler d1 create issue_management`)
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "issue_management"
-# database_id = "REPLACE_WITH_UUID"
+# D1 database binding — local dev uses miniflare's local SQLite regardless of database_id.
+# Before `wrangler deploy`, replace database_id with the real UUID from `wrangler d1 create issue_management`.
+[[d1_databases]]
+binding = "DB"
+database_name = "issue_management"
+database_id = "local-placeholder-uuid"
 
-# R2 bucket binding (uncomment + fill after `wrangler r2 bucket create issue-attachments`)
-# [[r2_buckets]]
-# binding = "R2"
-# bucket_name = "issue-attachments"
+# R2 bucket binding — local dev uses miniflare's local filesystem storage.
+# Before `wrangler deploy`, ensure bucket exists: `wrangler r2 bucket create issue-attachments`.
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "issue-attachments"
 
-# KV namespace binding (uncomment + fill after `wrangler kv namespace create issue_kv`)
-# [[kv_namespaces]]
-# binding = "KV"
-# id = "REPLACE_WITH_ID"
+# KV namespace binding — local dev uses miniflare's local KV.
+# Before `wrangler deploy`, replace id with the real one from `wrangler kv namespace create issue_kv`.
+[[kv_namespaces]]
+binding = "KV"
+id = "local-placeholder-id"
 
 # Assets binding for serving the built Vite output alongside the Worker
 # Set after `npm run build` produces dist/

@@ -5,17 +5,11 @@
  * inline dialog confirms before firing the mutation.
  */
 import { useState, type MouseEvent, type KeyboardEvent } from 'react'
-import { MoreHorizontal, Webhook as WebhookIcon } from 'lucide-react'
+import { Trash2, Webhook as WebhookIcon } from 'lucide-react'
 import type { Issue, Label } from '@/lib/api-types'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -24,6 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useDeleteIssueMutation } from '../mutations'
 import {
@@ -120,10 +120,25 @@ export function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
         <TableCell className="min-w-0">
           <div className="flex items-start gap-2 min-w-0">
             {issue.source === 'webhook' && (
-              <WebhookIcon
-                className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                aria-label="webhook 来源"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className={cn(
+                        'mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center',
+                        'rounded-full bg-primary text-primary-foreground shadow-sm',
+                        'ring-2 ring-background',
+                      )}
+                      aria-label={`来自 webhook：${issue.source_name ?? 'webhook'}`}
+                    >
+                      <WebhookIcon className="h-3 w-3" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    来源：{issue.source_name ?? 'webhook'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{issue.title}</p>
@@ -173,31 +188,20 @@ export function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
         <TableCell className="hidden lg:table-cell whitespace-nowrap text-xs text-muted-foreground tabular-nums">
           {formatRelative(issue.updated_at)}
         </TableCell>
-        <TableCell className="text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                data-no-row-activate
-                className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                aria-label="更多操作"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onSelect={(e) => {
-                  e.preventDefault()
-                  setConfirmOpen(true)
-                }}
-              >
-                删除
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <TableCell className="sticky right-0 z-10 w-[88px] bg-background pr-4 text-center shadow-[inset_1px_0_0_0_hsl(var(--border))] group-hover:bg-muted/50">
+          <Button
+            variant="ghost"
+            size="icon"
+            data-no-row-activate
+            className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            aria-label={`删除 issue ${issue.title}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              setConfirmOpen(true)
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </TableCell>
       </TableRow>
 

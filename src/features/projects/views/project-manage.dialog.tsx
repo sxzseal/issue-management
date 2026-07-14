@@ -25,7 +25,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -340,58 +339,59 @@ function CreateProjectForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex items-end gap-2 rounded-md border border-dashed border-border p-3"
+        className="space-y-2 rounded-md border border-dashed border-border p-3"
       >
-        <FormField
-          control={form.control}
-          name="color"
-          render={({ field }) => (
-            <FormItem className="flex-none">
-              <FormLabel className="text-xs">颜色</FormLabel>
-              <FormControl>
-                <input
-                  type="color"
-                  value={field.value}
-                  onChange={field.onChange}
-                  className="h-9 w-9 cursor-pointer rounded border border-input bg-transparent"
-                  aria-label="新项目颜色"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="min-w-0 flex-1">
-              <FormLabel className="text-xs">新项目名称</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="例如：Growth 实验"
-                  maxLength={50}
-                  className="h-9"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          size="sm"
-          disabled={createMutation.isPending}
-          className="h-9"
-        >
-          {createMutation.isPending ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="mr-1.5 h-4 w-4" />
-          )}
-          添加
-        </Button>
+        <p className="text-xs font-medium text-muted-foreground">新建项目</p>
+        <div className="flex items-start gap-2">
+          <FormField
+            control={form.control}
+            name="color"
+            render={({ field }) => (
+              <FormItem className="flex-none space-y-0">
+                <FormControl>
+                  <input
+                    type="color"
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="h-9 w-9 cursor-pointer rounded-md border border-input bg-transparent p-1"
+                    aria-label="新项目颜色"
+                    title="选择颜色"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="min-w-0 flex-1 space-y-1">
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="例如：Growth 实验"
+                    maxLength={50}
+                    className="h-9"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={createMutation.isPending}
+            className="h-9 flex-none"
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="mr-1.5 h-4 w-4" />
+            )}
+            添加
+          </Button>
+        </div>
       </form>
     </Form>
   )

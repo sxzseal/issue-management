@@ -2,7 +2,7 @@
 -- Stable literal IDs so tests can assert. Uses INSERT OR IGNORE for idempotency.
 -- All timestamps are ISO 8601 UTC (2026-07-13T...Z).
 
-BEGIN;
+-- BEGIN; (removed for D1 compatibility)
 
 ------------------------------------------------------------------------------
 -- projects (5)
@@ -115,4 +115,4 @@ INSERT OR IGNORE INTO webhook_logs (
    '{"data":{"title":""}}',
    422, 'validation failed: title must be 1..200 chars', NULL, '2026-07-13T07:35:00Z');
 
-COMMIT;
+-- COMMIT; (removed for D1 compatibility)
