@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { corsMiddleware } from './middleware/cors'
 import { requestLogger } from './middleware/logger'
 import { errorHandler } from './middleware/error-handler'
+import { securityHeaders } from './middleware/security-headers'
 import { mountApiRoutes } from './routes'
 import { err } from './lib/response'
 import { ErrorCodes, ErrorMessages } from '../src/lib/error-codes'
@@ -24,9 +25,12 @@ const app = new Hono<{ Bindings: Env }>()
 // 1) requestLogger — first, so requestId + timing wrap everything (including error paths).
 // 2) errorHandler  — inside logger, outside CORS: thrown errors still produce a structured 500 envelope.
 // 3) corsMiddleware — after errorHandler so CORS response headers are added even to error envelopes.
+// 4) securityHeaders — outermost that touches response headers; runs on the way
+//    back so its headers survive both CORS and error envelopes.
 app.use('*', requestLogger())
 app.use('*', errorHandler())
 app.use('*', corsMiddleware())
+app.use('*', securityHeaders())
 
 app.route('/api', mountApiRoutes())
 

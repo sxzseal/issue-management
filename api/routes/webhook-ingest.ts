@@ -64,6 +64,15 @@ type FlatWebhookIngestBody = z.infer<typeof flatWebhookIngestBodySchema>
 // -----------------------------------------------------------------------------
 const RATE_LIMIT_PER_SOURCE = 30 // req / minute / source (per AC-142)
 const RATE_LIMIT_WINDOW_SEC = 60
+/**
+ * Coarse-grained pre-auth IP rate limit — applied BEFORE HMAC verification to
+ * cap the cost of unauthenticated floods. Attackers can rotate X-Webhook-Source
+ * to bypass the per-source limit, but rotating source IPs is materially harder
+ * behind CF's edge. Ceiling is intentionally higher than PER_SOURCE so a
+ * legitimate multi-integration ingress from one NAT doesn't get throttled.
+ */
+const RATE_LIMIT_PREAUTH_PER_IP = 120
+const RATE_LIMIT_PREAUTH_WINDOW_SEC = 60
 const DEFAULT_PRIORITY: IssuePriority = 'p2'
 const INBOX_PROJECT_ID = 'proj_inbox'
 const DEFAULT_LABEL_COLOR = '#64748b' // neutral slate — auto-created labels
@@ -275,6 +284,23 @@ app.post('/webhooks/issues', async (c) => {
 
   const trimmedSource = source.trim()
   const trimmedEventId = eventId.trim()
+
+  // --- Pre-auth coarse IP rate limit --------------------------------------
+  // Runs BEFORE HMAC verification and BEFORE any D1/KV write. Without this,
+  // signature-failure floods still cost 1 HMAC + 1 logPreAuthFailure D1 INSERT
+  // per request (attacker-controlled event_id → unbounded webhook_logs growth).
+  // The 429 response here writes nothing and does not increment the per-source
+  // counter, which is the point.
+  const clientIp = c.req.header('CF-Connecting-IP') ?? 'unknown'
+  const preAuthRl = await rateLimit(
+    c.env.KV,
+    `webhook:preauth:${clientIp}`,
+    RATE_LIMIT_PREAUTH_PER_IP,
+    RATE_LIMIT_PREAUTH_WINDOW_SEC,
+  )
+  if (!preAuthRl.ok) {
+    return err(c, ErrorCodes.RATE_LIMITED, '请求过于频繁')
+  }
 
   // --- Signature verification FIRST ----------------------------------------
   // Verify HMAC before any side-effect writes (rate-limit counter, webhook_logs
