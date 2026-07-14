@@ -4,9 +4,7 @@
  * 每段代码含 X-Webhook-Signature / X-Webhook-Source / X-Webhook-Event-Id 三个 header
  * + body 示例。每个 tab 附一个「复制代码」按钮。
  */
-import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +16,8 @@ import {
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { EXAMPLES_SECTION_ID } from './intro-card'
 
 const CURL_EXAMPLE = `curl -X POST https://your-domain/api/webhooks/issues \\
   -H "X-Webhook-Signature: sha256=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -r | cut -d' ' -f1)" \\
@@ -66,25 +66,12 @@ const TABS: { value: TabValue; label: string; code: string }[] = [
   { value: 'python', label: 'Python', code: PYTHON_EXAMPLE },
 ]
 
-const COPY_FEEDBACK_MS = 1400
-
 interface CodeBlockProps {
   code: string
 }
 
 function CodeBlock({ code }: CodeBlockProps) {
-  const [copied, setCopied] = useState<boolean>(false)
-
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      toast.success('已复制代码')
-      window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
-    } catch {
-      toast.error('复制失败，请手动选中')
-    }
-  }
+  const { copied, copy } = useCopyToClipboard()
 
   return (
     <div className="relative">
@@ -93,7 +80,7 @@ function CodeBlock({ code }: CodeBlockProps) {
         variant="outline"
         size="sm"
         className="absolute right-2 top-2 gap-1.5"
-        onClick={handleCopy}
+        onClick={() => void copy(code, '已复制代码')}
       >
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         {copied ? '已复制' : '复制'}
@@ -112,7 +99,7 @@ function CodeBlock({ code }: CodeBlockProps) {
 
 export function ExamplesCard() {
   return (
-    <Card>
+    <Card id={EXAMPLES_SECTION_ID} className="scroll-mt-4">
       <CardHeader>
         <CardTitle className="text-base">示例请求</CardTitle>
         <CardDescription>

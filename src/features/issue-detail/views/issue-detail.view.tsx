@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils'
 import type { IssueDetail } from '@/lib/api-types'
 
 import { issueDetailQueries } from '../queries'
+import { relativeTime } from '../lib/relative-time'
 import {
   useCreateCommentMutation,
   useDeleteCommentMutation,
@@ -51,21 +52,6 @@ function isNotFound(error: unknown): boolean {
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—'
-  return iso.slice(0, 10)
-}
-
-function relativeTime(iso: string): string {
-  const now = Date.now()
-  const then = new Date(iso).getTime()
-  if (!Number.isFinite(then)) return iso.slice(0, 10)
-  const diffSec = Math.max(0, Math.round((now - then) / 1000))
-  if (diffSec < 60) return '刚刚'
-  const diffMin = Math.round(diffSec / 60)
-  if (diffMin < 60) return `${diffMin} 分钟前`
-  const diffHour = Math.round(diffMin / 60)
-  if (diffHour < 24) return `${diffHour} 小时前`
-  const diffDay = Math.round(diffHour / 24)
-  if (diffDay < 7) return `${diffDay} 天前`
   return iso.slice(0, 10)
 }
 
@@ -165,15 +151,9 @@ export function IssueDetailView() {
                 <InlineEditableTitle
                   value={issue.title}
                   onSave={(title) =>
-                    new Promise<void>((resolve, reject) => {
-                      updateIssue.mutate(
-                        { id: issue.id, body: { title } },
-                        {
-                          onSuccess: () => resolve(),
-                          onError: (e) => reject(e),
-                        },
-                      )
-                    })
+                    updateIssue
+                      .mutateAsync({ id: issue.id, body: { title } })
+                      .then(() => undefined)
                   }
                 />
                 <MetaRow issue={issue} />
@@ -204,15 +184,9 @@ export function IssueDetailView() {
             <CommentComposer
               issueId={issue.id}
               onSubmit={(body) =>
-                new Promise<void>((resolve, reject) => {
-                  createComment.mutate(
-                    { issueId: issue.id, body: { body } },
-                    {
-                      onSuccess: () => resolve(),
-                      onError: (e) => reject(e),
-                    },
-                  )
-                })
+                createComment
+                  .mutateAsync({ issueId: issue.id, body: { body } })
+                  .then(() => undefined)
               }
             />
           </div>

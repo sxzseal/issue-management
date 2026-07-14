@@ -2,27 +2,14 @@
  * BoardColumn — kanban column (status header + scrollable issue card list).
  * Empty state shows a dashed placeholder (AC-025).
  */
-import { Archive, CheckCircle2, Circle, PlayCircle, Plus, type LucideIcon } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Issue, IssueStatus } from '@/lib/api-types'
 import type { BoardColumn as BoardColumnData } from '../types'
+import { STATUS_ICON, STATUS_ICON_CLASS } from '../status-visuals'
 import { IssueCard } from './issue-card'
-
-const STATUS_ICON: Record<IssueStatus, LucideIcon> = {
-  todo: Circle,
-  in_progress: PlayCircle,
-  done: CheckCircle2,
-  archived: Archive,
-}
-
-const STATUS_ICON_CLASS: Record<IssueStatus, string> = {
-  todo: 'text-muted-foreground',
-  in_progress: 'text-primary',
-  done: 'text-emerald-600 dark:text-emerald-400',
-  archived: 'text-muted-foreground/70',
-}
 
 interface BoardColumnProps {
   column: BoardColumnData

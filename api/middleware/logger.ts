@@ -14,6 +14,13 @@ import type { Env } from '../index'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
+const LEVEL_RANK: Record<LogLevel, number> = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
+}
+
 function pickLevel(status: number): LogLevel {
   if (status >= 500) {
     return 'error'
@@ -24,11 +31,13 @@ function pickLevel(status: number): LogLevel {
   return 'info'
 }
 
+/**
+ * Emit when the request's level rank is >= the configured `LOG_LEVEL` rank.
+ * Unset LOG_LEVEL defaults to `info` — everything at info and above is emitted.
+ */
 function shouldEmit(level: LogLevel, envLevel: LogLevel | undefined): boolean {
-  if (envLevel === 'error') {
-    return level === 'error'
-  }
-  return true
+  const threshold = envLevel ? LEVEL_RANK[envLevel] : LEVEL_RANK.info
+  return LEVEL_RANK[level] >= threshold
 }
 
 function resolveIp(header: string | undefined, fallback: string | undefined): string {

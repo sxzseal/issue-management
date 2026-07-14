@@ -28,6 +28,17 @@ export class UnauthorizedError extends RequestError {
   }
 }
 
+/**
+ * Extract a user-facing message from a mutation error, falling back to the
+ * supplied string. Consumed by feature `mutations.ts` files so they don't each
+ * reimplement the same instanceof check.
+ */
+export function humanError(e: unknown, fallback: string): string {
+  if (e instanceof RequestError) return e.message || fallback
+  if (e instanceof Error && e.message) return e.message
+  return fallback
+}
+
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   query?: Record<string, string | number | boolean | undefined | null>
   body?: unknown
@@ -71,8 +82,12 @@ function buildURL(path: string, query?: RequestOptions['query'], baseURL?: strin
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { query, body, baseURL, headers, ...rest } = options
   const mergedHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(headers as Record<string, string> | undefined),
+  }
+  // Only send Content-Type on bodies — bodyless requests can stay CORS-safe
+  // (avoids a preflight against the vite proxy in dev).
+  if (body !== undefined && !('Content-Type' in mergedHeaders) && !('content-type' in mergedHeaders)) {
+    mergedHeaders['Content-Type'] = 'application/json'
   }
   const token = tokenProvider?.()
   if (token && !('Authorization' in mergedHeaders) && !('authorization' in mergedHeaders)) {

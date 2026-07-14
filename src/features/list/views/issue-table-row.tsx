@@ -6,7 +6,7 @@
  */
 import { useState, type MouseEvent, type KeyboardEvent } from 'react'
 import { MoreHorizontal, Webhook as WebhookIcon } from 'lucide-react'
-import type { Issue, IssueStatus, IssuePriority, Label } from '@/lib/api-types'
+import type { Issue, Label } from '@/lib/api-types'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,34 +26,12 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { useDeleteIssueMutation } from '../mutations'
-
-const STATUS_LABEL: Record<IssueStatus, string> = {
-  todo: '待办',
-  in_progress: '进行中',
-  done: '已完成',
-  archived: '已归档',
-}
-
-const PRIORITY_LABEL: Record<IssuePriority, string> = {
-  p0: 'P0',
-  p1: 'P1',
-  p2: 'P2',
-  p3: 'P3',
-}
-
-const STATUS_CLASS: Record<IssueStatus, string> = {
-  todo: 'border-muted-foreground/30 text-muted-foreground',
-  in_progress: 'border-primary/60 text-primary bg-primary/10',
-  done: 'border-accent-foreground/30 text-muted-foreground',
-  archived: 'border-muted-foreground/20 text-muted-foreground/70',
-}
-
-const PRIORITY_CLASS: Record<IssuePriority, string> = {
-  p0: 'border-destructive/60 text-destructive bg-destructive/10',
-  p1: 'border-primary/60 text-primary bg-primary/10',
-  p2: 'border-accent-foreground/40 text-accent-foreground bg-accent',
-  p3: 'border-muted-foreground/30 text-muted-foreground bg-muted',
-}
+import {
+  PRIORITY_CLASS,
+  PRIORITY_LABEL,
+  STATUS_CLASS,
+  STATUS_LABEL,
+} from '../status-visuals'
 
 interface IssueTableRowProps {
   issue: Issue

@@ -8,7 +8,6 @@
  */
 import { useEffect, useState } from 'react'
 import { Check, Copy, Loader2, RefreshCw } from 'lucide-react'
-import { toast } from 'sonner'
 
 import {
   Dialog,
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { useRotateWebhookSecretMutation } from '../../mutations'
 
 interface RotateSecretModalProps {
@@ -29,19 +29,16 @@ interface RotateSecretModalProps {
 
 type Phase = 'confirm' | 'result'
 
-const COPY_FEEDBACK_MS = 1400
-
 export function RotateSecretModal({ open, onOpenChange }: RotateSecretModalProps) {
   const [phase, setPhase] = useState<Phase>('confirm')
   const [newSecret, setNewSecret] = useState<string | null>(null)
-  const [copied, setCopied] = useState<boolean>(false)
+  const { copied, copy } = useCopyToClipboard()
   const mutation = useRotateWebhookSecretMutation()
 
   useEffect(() => {
     if (!open) {
       setPhase('confirm')
       setNewSecret(null)
-      setCopied(false)
     }
   }, [open])
 
@@ -55,16 +52,9 @@ export function RotateSecretModal({ open, onOpenChange }: RotateSecretModalProps
     }
   }
 
-  const handleCopy = async (): Promise<void> => {
+  const handleCopy = (): void => {
     if (!newSecret) return
-    try {
-      await navigator.clipboard.writeText(newSecret)
-      setCopied(true)
-      toast.success('已复制 Secret')
-      window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
-    } catch {
-      toast.error('复制失败，请手动选中')
-    }
+    void copy(newSecret, '已复制 Secret')
   }
 
   const handleClose = (): void => onOpenChange(false)

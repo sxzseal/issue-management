@@ -8,7 +8,7 @@
  * because features/projects and features/labels modules are not planned in v1
  * scope. See sa-T023 receipt deviations.
  */
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { queryOptions, useQuery } from '@tanstack/react-query'
@@ -92,9 +92,22 @@ interface CreateIssueModalProps {
   defaultStatus?: IssueStatus
 }
 
+/**
+ * Subscribe to a media query and re-render when it changes. Uses
+ * useSyncExternalStore so we react to viewport rotation / resize, unlike a
+ * one-shot matchMedia().matches read that never re-runs.
+ */
 function useMatchesMobile(query = '(max-width: 639px)'): boolean {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia(query).matches
+  return useSyncExternalStore(
+    (notify) => {
+      if (typeof window === 'undefined') return () => {}
+      const mql = window.matchMedia(query)
+      mql.addEventListener('change', notify)
+      return () => mql.removeEventListener('change', notify)
+    },
+    () => (typeof window === 'undefined' ? false : window.matchMedia(query).matches),
+    () => false,
+  )
 }
 
 export function CreateIssueModal({

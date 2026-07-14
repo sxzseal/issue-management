@@ -10,46 +10,33 @@
  */
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { useQuery, queryOptions } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Check, Link as LinkIcon, Package, PackageOpen, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { request } from '@/lib/request'
-import type { IssueDetail, Project } from '@/lib/api-types'
+import type { IssueDetail } from '@/lib/api-types'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { projectsQueryOptions } from '@/features/projects/queries'
 
 import { useUpdateIssueMutation } from '../mutations'
 import { DeleteIssueModal } from './dialogs/delete-issue.modal'
-
-const projectsListQuery = queryOptions({
-  queryKey: ['projects', 'list'] as const,
-  queryFn: () => request<Project[]>('/api/projects'),
-  staleTime: 60_000,
-})
 
 interface BreadcrumbActionsProps {
   issue: IssueDetail
 }
 
 export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
-  const [copied, setCopied] = useState<boolean>(false)
   const [deleteOpen, setDeleteOpen] = useState<boolean>(false)
+  const { copied, copy } = useCopyToClipboard()
   const update = useUpdateIssueMutation()
-  const { data: projects } = useQuery(projectsListQuery)
+  const { data: projects } = useQuery(projectsQueryOptions)
 
   const project = projects?.find((p) => p.id === issue.project_id)
   const archived = issue.status === 'archived'
 
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1500)
-      toast.success('链接已复制')
-    } catch {
-      toast.error('复制失败')
-    }
+  const copyLink = () => {
+    void copy(window.location.href, '链接已复制')
   }
 
   const toggleArchive = () => {

@@ -4,9 +4,7 @@
  * URL 取 `${window.location.origin}/api/webhooks/issues`；点击复制走 Clipboard API，
  * 成功后 toast 提示。SSR 环境下 `window` 不可用，这里 view 只跑在浏览器端，无需兜底。
  */
-import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -17,23 +15,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-
-const COPY_FEEDBACK_MS = 1400
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 
 export function EndpointCard() {
   const url = `${window.location.origin}/api/webhooks/issues`
-  const [copied, setCopied] = useState<boolean>(false)
-
-  const handleCopy = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      toast.success('已复制端点 URL')
-      window.setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
-    } catch {
-      toast.error('复制失败，请手动选中')
-    }
-  }
+  const { copied, copy } = useCopyToClipboard()
 
   return (
     <Card>
@@ -55,7 +41,7 @@ export function EndpointCard() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={handleCopy}
+            onClick={() => void copy(url, '已复制端点 URL')}
             className="gap-1.5"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}

@@ -3,7 +3,6 @@
  * Announces status transitions via aria-live (AC-024).
  */
 import { useEffect, useState } from 'react'
-import { Archive, CheckCircle2, Circle, PlayCircle, type LucideIcon } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -14,21 +13,8 @@ import {
 import { cn } from '@/lib/utils'
 import type { Issue, IssueStatus } from '@/lib/api-types'
 import { BOARD_COLUMNS, BOARD_COLUMN_LABELS } from '../../types'
+import { STATUS_ICON, STATUS_ICON_CLASS } from '../../status-visuals'
 import { useUpdateIssueStatusMutation } from '../../mutations'
-
-const STATUS_ICON: Record<IssueStatus, LucideIcon> = {
-  todo: Circle,
-  in_progress: PlayCircle,
-  done: CheckCircle2,
-  archived: Archive,
-}
-
-const STATUS_ICON_CLASS: Record<IssueStatus, string> = {
-  todo: 'text-muted-foreground',
-  in_progress: 'text-primary',
-  done: 'text-emerald-600 dark:text-emerald-400',
-  archived: 'text-muted-foreground/70',
-}
 
 interface StatusSelectSheetProps {
   open: boolean

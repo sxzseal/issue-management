@@ -1,17 +1,25 @@
 /**
  * SideNav — 持久化左侧导航
- * v1：4 个功能入口 + 项目列表占位。项目条目为静态 mock，后续 T017+ 用真实数据替换。
+ * 顶部为功能入口；下方是从 /api/projects 拉取的项目列表，含「管理」入口。
  */
+import { useState } from 'react'
 import { NavLink } from 'react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
-  BarChart3,
   Inbox,
   LayoutGrid,
   ListOrdered,
+  Loader2,
+  Settings2,
+  Tag,
   Webhook,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { projectsQueryOptions } from '@/features/projects/queries'
+import { ProjectManageDialog } from '@/features/projects/views/project-manage.dialog'
+import { labelsQueryOptions } from '@/features/labels/queries'
+import { LabelManageDialog } from '@/features/labels/views/label-manage.dialog'
 
 interface NavItemProps {
   to: string
@@ -42,28 +50,21 @@ function NavItem({ to, icon: Icon, end, children }: NavItemProps) {
   )
 }
 
-interface ProjectItem {
-  id: string
+interface ColoredNavRowProps {
+  to: string
+  color: string
   name: string
-  dotClassName: string
 }
 
-const MOCK_PROJECTS: ProjectItem[] = [
-  { id: 'ai-forge', name: 'AI Forge', dotClassName: 'bg-primary' },
-  { id: 'paperbird', name: 'PaperBird', dotClassName: 'bg-emerald-500' },
-  { id: 'bufflab', name: 'BuffLab', dotClassName: 'bg-amber-500' },
-  { id: 'infra', name: '基础设施', dotClassName: 'bg-violet-500' },
-]
-
-interface ProjectRowProps {
-  project: ProjectItem
-}
-
-function ProjectRow({ project }: ProjectRowProps) {
+/**
+ * Shared row for the projects / labels sidebar lists: a colored dot + name +
+ * active/hover ring. Both lists used to inline this markup verbatim.
+ */
+function ColoredNavRow({ to, color, name }: ColoredNavRowProps) {
   return (
     <li>
       <NavLink
-        to={`/projects/${project.id}`}
+        to={to}
         className={({ isActive }) =>
           cn(
             'flex items-center gap-2 rounded px-3 py-1.5 text-sm text-foreground transition-colors',
@@ -74,16 +75,22 @@ function ProjectRow({ project }: ProjectRowProps) {
         }
       >
         <span
-          className={cn('h-2 w-2 flex-none rounded-full', project.dotClassName)}
           aria-hidden
+          className="h-2 w-2 flex-none rounded-full"
+          style={{ backgroundColor: color }}
         />
-        <span className="min-w-0 flex-1 truncate">{project.name}</span>
+        <span className="min-w-0 flex-1 truncate">{name}</span>
       </NavLink>
     </li>
   )
 }
 
 export function SideNav() {
+  const [projectManageOpen, setProjectManageOpen] = useState(false)
+  const [labelManageOpen, setLabelManageOpen] = useState(false)
+  const projects = useQuery(projectsQueryOptions)
+  const labels = useQuery(labelsQueryOptions)
+
   return (
     <nav
       role="navigation"
@@ -101,28 +108,94 @@ export function SideNav() {
           <NavItem to="/list" icon={ListOrdered}>
             列表
           </NavItem>
-          <NavItem to="/stats" icon={BarChart3}>
-            统计
-          </NavItem>
           <NavItem to="/settings/webhook" icon={Webhook}>
             Webhook
           </NavItem>
         </ul>
-        <div className="mt-4 px-3 pb-2 pt-3">
+        <div className="mt-4 flex items-center justify-between px-3 pb-2 pt-3">
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <Inbox className="h-3.5 w-3.5" aria-hidden />
             <span>项目列表</span>
           </div>
+          <button
+            type="button"
+            onClick={() => setProjectManageOpen(true)}
+            className={cn(
+              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors',
+              'hover:bg-accent hover:text-accent-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+            aria-label="管理项目"
+          >
+            <Settings2 className="h-3.5 w-3.5" aria-hidden />
+            管理
+          </button>
         </div>
-        <ul className="flex flex-col gap-0.5">
-          {MOCK_PROJECTS.map((p) => (
-            <ProjectRow key={p.id} project={p} />
-          ))}
-        </ul>
+        {projects.isLoading ? (
+          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+            加载中…
+          </div>
+        ) : (projects.data ?? []).length === 0 ? (
+          <p className="px-3 py-2 text-xs text-muted-foreground">暂无项目</p>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {(projects.data ?? []).map((p) => (
+              <ColoredNavRow
+                key={p.id}
+                to={`/list?project_id=${encodeURIComponent(p.id)}`}
+                color={p.color}
+                name={p.name}
+              />
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-4 flex items-center justify-between px-3 pb-2 pt-3">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <Tag className="h-3.5 w-3.5" aria-hidden />
+            <span>标签</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLabelManageOpen(true)}
+            className={cn(
+              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors',
+              'hover:bg-accent hover:text-accent-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            )}
+            aria-label="管理标签"
+          >
+            <Settings2 className="h-3.5 w-3.5" aria-hidden />
+            管理
+          </button>
+        </div>
+        {labels.isLoading ? (
+          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+            加载中…
+          </div>
+        ) : (labels.data ?? []).length === 0 ? (
+          <p className="px-3 py-2 text-xs text-muted-foreground">暂无标签</p>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {(labels.data ?? []).map((l) => (
+              <ColoredNavRow
+                key={l.id}
+                to={`/list?labels=${encodeURIComponent(l.id)}`}
+                color={l.color}
+                name={l.name}
+              />
+            ))}
+          </ul>
+        )}
       </div>
       <div className="flex-none border-t border-border p-3 text-xs text-muted-foreground">
         v1 · 单人个人产品
       </div>
+
+      <ProjectManageDialog open={projectManageOpen} onOpenChange={setProjectManageOpen} />
+      <LabelManageDialog open={labelManageOpen} onOpenChange={setLabelManageOpen} />
     </nav>
   )
 }
