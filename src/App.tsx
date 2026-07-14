@@ -1,5 +1,5 @@
-import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { AppShell } from './components/app-shell'
 import { OfflineBanner } from './components/offline-banner'
 import { Loading } from './features/_shared/state'
@@ -13,11 +13,18 @@ const LoginRoute = lazy(() => import('./routes/login.route'))
 const NotFoundRoute = lazy(() => import('./routes/not-found.route'))
 const WebhookSettingsRoute = lazy(() => import('./routes/webhook-settings.route'))
 
-function GuardedShell({ children }: { children: ReactNode }) {
+/**
+ * Layout route for all authenticated pages. Mounts the shell once and renders
+ * child routes into an <Outlet/>, so navigating between /board /list /issue/:id
+ * doesn't remount SideNav / TopBar and refresh their query subscriptions.
+ */
+function GuardedShellLayout() {
   useAuthGuard()
   return (
     <AppShell>
-      <Suspense fallback={<Loading />}>{children}</Suspense>
+      <Suspense fallback={<Loading />}>
+        <Outlet />
+      </Suspense>
     </AppShell>
   )
 }
@@ -31,46 +38,13 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/board" replace />} />
             <Route path="/login" element={<LoginRoute />} />
-            <Route
-              path="/board"
-              element={
-                <GuardedShell>
-                  <BoardRoute />
-                </GuardedShell>
-              }
-            />
-            <Route
-              path="/list"
-              element={
-                <GuardedShell>
-                  <ListRoute />
-                </GuardedShell>
-              }
-            />
-            <Route
-              path="/issue/:id"
-              element={
-                <GuardedShell>
-                  <IssueDetailRoute />
-                </GuardedShell>
-              }
-            />
-            <Route
-              path="/settings/webhook"
-              element={
-                <GuardedShell>
-                  <WebhookSettingsRoute />
-                </GuardedShell>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <GuardedShell>
-                  <NotFoundRoute />
-                </GuardedShell>
-              }
-            />
+            <Route element={<GuardedShellLayout />}>
+              <Route path="/board" element={<BoardRoute />} />
+              <Route path="/list" element={<ListRoute />} />
+              <Route path="/issue/:id" element={<IssueDetailRoute />} />
+              <Route path="/settings/webhook" element={<WebhookSettingsRoute />} />
+              <Route path="*" element={<NotFoundRoute />} />
+            </Route>
           </Routes>
         </Suspense>
       </BrowserRouter>

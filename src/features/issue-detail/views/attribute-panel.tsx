@@ -39,8 +39,8 @@ import type {
   IssuePriority,
   IssueStatus,
   Label,
-  Project,
 } from '@/lib/api-types'
+import { projectsQueryOptions } from '@/features/projects/queries'
 
 import { useUpdateIssueMutation } from '../mutations'
 
@@ -52,10 +52,10 @@ const STATUS_LABEL: Record<IssueStatus, string> = {
   archived: '已归档',
 }
 const STATUS_DOT: Record<IssueStatus, string> = {
-  todo: 'bg-muted-foreground',
-  in_progress: 'bg-primary',
-  done: 'bg-emerald-500',
-  archived: 'bg-muted',
+  todo: 'bg-[hsl(var(--status-todo))]',
+  in_progress: 'bg-[hsl(var(--status-in-progress))]',
+  done: 'bg-[hsl(var(--status-done))]',
+  archived: 'bg-[hsl(var(--status-archived))]',
 }
 
 const PRIORITY_ORDER: IssuePriority[] = ['p0', 'p1', 'p2', 'p3']
@@ -66,17 +66,11 @@ const PRIORITY_LABEL: Record<IssuePriority, string> = {
   p3: 'P3 · 低',
 }
 const PRIORITY_TONE: Record<IssuePriority, string> = {
-  p0: 'bg-destructive/10 text-destructive',
-  p1: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-  p2: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
-  p3: 'bg-muted text-muted-foreground',
+  p0: 'bg-[hsl(var(--priority-p0)/0.15)] text-[hsl(var(--priority-p0))]',
+  p1: 'bg-[hsl(var(--priority-p1)/0.15)] text-[hsl(var(--priority-p1))]',
+  p2: 'bg-[hsl(var(--priority-p2)/0.15)] text-[hsl(var(--priority-p2))]',
+  p3: 'bg-[hsl(var(--priority-p3)/0.15)] text-[hsl(var(--priority-p3))]',
 }
-
-const projectsListQuery = queryOptions({
-  queryKey: ['projects', 'list'] as const,
-  queryFn: () => request<Project[]>('/api/projects'),
-  staleTime: 60_000,
-})
 
 const labelsListQuery = queryOptions({
   queryKey: ['labels', 'list'] as const,
@@ -112,7 +106,7 @@ interface AttributePanelProps {
 
 export function AttributePanel({ issue }: AttributePanelProps) {
   const update = useUpdateIssueMutation()
-  const { data: projects } = useQuery(projectsListQuery)
+  const { data: projects } = useQuery(projectsQueryOptions)
   const { data: labels } = useQuery(labelsListQuery)
 
   const patch = (body: Parameters<typeof update.mutate>[0]['body']) => {
@@ -231,19 +225,37 @@ interface LabelsCardProps {
 function LabelsCard({ issue, allLabels, onSave }: LabelsCardProps) {
   const [open, setOpen] = useState<boolean>(false)
   const currentIds = issue.labels.map((l) => l.id)
+  // Buffer selection while the popover is open so rapid clicks compose locally
+  // instead of firing one PATCH per Checkbox (and racing on stale server state).
+  // Committed once on popover close.
+  const [pendingIds, setPendingIds] = useState<string[] | null>(null)
+  const displayIds = pendingIds ?? currentIds
 
   const toggle = (id: string) => {
-    const next = currentIds.includes(id)
-      ? currentIds.filter((x) => x !== id)
-      : [...currentIds, id]
-    onSave(next)
+    const base = pendingIds ?? currentIds
+    const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id]
+    setPendingIds(next)
+  }
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (!nextOpen) {
+      if (pendingIds !== null) {
+        // Only PATCH when the selection actually changed.
+        const changed =
+          pendingIds.length !== currentIds.length ||
+          pendingIds.some((id) => !currentIds.includes(id))
+        if (changed) onSave(pendingIds)
+      }
+      setPendingIds(null)
+    }
   }
 
   return (
     <SideCard
       title="标签"
       action={
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground">
               + 添加
@@ -255,7 +267,7 @@ function LabelsCard({ issue, allLabels, onSave }: LabelsCardProps) {
             ) : (
               <div className="max-h-64 space-y-1 overflow-y-auto">
                 {allLabels.map((l) => {
-                  const checked = currentIds.includes(l.id)
+                  const checked = displayIds.includes(l.id)
                   return (
                     <label
                       key={l.id}

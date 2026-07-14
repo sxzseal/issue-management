@@ -3,6 +3,7 @@
  *
  * AC-054 / AC-307: prose typography, whitespace preserved via wrapper spacing.
  */
+import { memo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
@@ -14,7 +15,7 @@ interface BodyMarkdownProps {
   hideEmptyPlaceholder?: boolean
 }
 
-export function BodyMarkdown({ children, className, hideEmptyPlaceholder }: BodyMarkdownProps) {
+function BodyMarkdownImpl({ children, className, hideEmptyPlaceholder }: BodyMarkdownProps) {
   const text = children ?? ''
   if (!text.trim()) {
     if (hideEmptyPlaceholder) {
@@ -51,3 +52,7 @@ export function BodyMarkdown({ children, className, hideEmptyPlaceholder }: Body
     </article>
   )
 }
+
+// Memoize so unrelated re-renders of the parent (attribute edits, mutations)
+// don't re-parse a potentially 30KB+ issue body on every render.
+export const BodyMarkdown = memo(BodyMarkdownImpl)

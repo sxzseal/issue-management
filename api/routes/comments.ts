@@ -59,17 +59,17 @@ app.get('/issues/:id/comments', async (c) => {
   const { page, page_size } = parsed.data
   const offset = (page - 1) * page_size
 
-  const listResult = await c.env.DB.prepare(
-    'SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
-  )
-    .bind(issueId, page_size, offset)
-    .all<CommentRow>()
-
-  const countRow = await c.env.DB.prepare(
-    'SELECT COUNT(*) AS n FROM comments WHERE issue_id = ?',
-  )
-    .bind(issueId)
-    .first<{ n: number }>()
+  // Count + page share the same WHERE and have no data dependency — run in parallel.
+  const [listResult, countRow] = await Promise.all([
+    c.env.DB.prepare(
+      'SELECT * FROM comments WHERE issue_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+    )
+      .bind(issueId, page_size, offset)
+      .all<CommentRow>(),
+    c.env.DB.prepare('SELECT COUNT(*) AS n FROM comments WHERE issue_id = ?')
+      .bind(issueId)
+      .first<{ n: number }>(),
+  ])
   const total = countRow?.n ?? 0
 
   return ok(c, {

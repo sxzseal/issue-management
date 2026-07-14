@@ -3,7 +3,7 @@
 -- Reminder: at runtime the D1 binding auto-enables foreign_keys; when executing
 -- via `wrangler d1 execute` you may need `PRAGMA foreign_keys = ON;` before DML.
 
-BEGIN;
+-- BEGIN; (removed for D1 compatibility)
 
 ------------------------------------------------------------------------------
 -- projects
@@ -58,6 +58,10 @@ CREATE TABLE issues (
 CREATE INDEX idx_issues_project_status  ON issues(project_id, status);
 CREATE INDEX idx_issues_status_priority ON issues(status, priority);
 CREATE INDEX idx_issues_due_date        ON issues(due_date);
+-- Composite index covers the common "recent issues in a project" query
+-- (list/board views filter by project_id, order by updated_at DESC) as an
+-- index range scan with no filesort step.
+CREATE INDEX idx_issues_project_updated ON issues(project_id, updated_at DESC);
 CREATE INDEX idx_issues_updated_at      ON issues(updated_at);
 
 ------------------------------------------------------------------------------
@@ -104,5 +108,9 @@ CREATE TABLE webhook_logs (
 
 CREATE INDEX idx_webhook_logs_received ON webhook_logs(received_at DESC);
 CREATE INDEX idx_webhook_logs_source   ON webhook_logs(source, received_at DESC);
+-- Partial index on the FK column so the ON DELETE SET NULL cascade + any
+-- "webhook logs for this issue" lookup runs in O(log n) instead of a table
+-- scan. Excludes the NULL majority (rate-limit / signature-failure rows).
+CREATE INDEX idx_webhook_logs_issue ON webhook_logs(issue_id) WHERE issue_id IS NOT NULL;
 
-COMMIT;
+-- COMMIT; (removed for D1 compatibility)
