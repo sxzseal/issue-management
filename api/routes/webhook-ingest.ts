@@ -21,6 +21,12 @@ import { ok, err } from '../lib/response'
 import { ErrorCodes } from '../../src/lib/error-codes'
 import { verifyWebhookSignature } from '../lib/webhook-sig'
 import {
+  deleteBodyFromR2,
+  issueBodyKey,
+  shouldOverflow,
+  writeBodyToR2,
+} from '../lib/r2-body'
+import {
   readIdempotencyRecord,
   writeIdempotencyRecord,
   type IdempotencyRecord,
@@ -61,6 +67,12 @@ const RATE_LIMIT_WINDOW_SEC = 60
 const DEFAULT_PRIORITY: IssuePriority = 'p2'
 const INBOX_PROJECT_ID = 'proj_inbox'
 const DEFAULT_LABEL_COLOR = '#64748b' // neutral slate — auto-created labels
+/**
+ * Cap for the raw request body persisted to `webhook_logs.payload`. Larger
+ * bodies are truncated at write-time so an unauthenticated caller cannot
+ * amplify DB writes by shipping a 200KB body per request.
+ */
+const LOG_PAYLOAD_MAX_BYTES = 1024
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -73,9 +85,58 @@ function randomHexId(prefix: string, length: number): string {
   return prefix + crypto.randomUUID().replace(/-/g, '').slice(0, length)
 }
 
+/** Cap the persisted payload so unauthenticated callers can't amplify writes. */
+function truncateForLog(payload: string): string {
+  return payload.length > LOG_PAYLOAD_MAX_BYTES
+    ? payload.slice(0, LOG_PAYLOAD_MAX_BYTES)
+    : payload
+}
+
+/**
+ * Audit-only write to `webhook_logs` for failures reached BEFORE signature
+ * verification. Deliberately does NOT persist an idempotency record — an
+ * unauthenticated attacker could otherwise poison the cache by guessing a
+ * future event_id (see review H11). Payload is truncated to bound growth.
+ */
+async function logPreAuthFailure(
+  env: Env,
+  args: {
+    source: string
+    eventId: string
+    payload: string
+    httpStatus: number
+    errorSummary: string
+  },
+): Promise<void> {
+  const receivedAt = nowIso()
+  const logId = randomHexId('whlg_', 12)
+  try {
+    await env.DB.prepare(
+      `INSERT INTO webhook_logs
+         (id, source, event_id, event_type, payload, http_status, error_summary, issue_id, received_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)
+       ON CONFLICT(event_id) DO NOTHING`,
+    )
+      .bind(
+        logId,
+        args.source,
+        args.eventId,
+        'unknown',
+        truncateForLog(args.payload),
+        args.httpStatus,
+        args.errorSummary,
+        receivedAt,
+      )
+      .run()
+  } catch (e) {
+    console.warn('webhook-ingest: failed to write pre-auth webhook_logs', e)
+  }
+}
+
 /**
  * Persist a `webhook_logs` row and an idempotency record in one place so error
- * branches and the success path share the same write pattern.
+ * branches and the success path share the same write pattern. Only called
+ * AFTER signature verification passes.
  */
 async function logIngestOutcome(
   env: Env,
@@ -105,7 +166,7 @@ async function logIngestOutcome(
         args.source,
         args.eventId,
         args.eventType,
-        args.payload,
+        truncateForLog(args.payload),
         args.httpStatus,
         args.errorSummary,
         args.issueId,
@@ -162,17 +223,20 @@ async function upsertLabelIds(env: Env, names: readonly string[]): Promise<strin
     return []
   }
 
+  // One batch instead of N sequential round-trips. `ON CONFLICT(name) DO NOTHING`
+  // keeps this safe even when the same label already exists.
   const timestamp = nowIso()
-  for (const name of unique) {
-    const id = randomHexId('lbl_', 10)
-    await env.DB.prepare(
-      `INSERT INTO labels (id, name, color, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT(name) DO NOTHING`,
-    )
-      .bind(id, name, DEFAULT_LABEL_COLOR, timestamp, timestamp)
-      .run()
-  }
+  await env.DB.batch(
+    unique.map((name) =>
+      env.DB
+        .prepare(
+          `INSERT INTO labels (id, name, color, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(name) DO NOTHING`,
+        )
+        .bind(randomHexId('lbl_', 10), name, DEFAULT_LABEL_COLOR, timestamp, timestamp),
+    ),
+  )
 
   const placeholders = unique.map(() => '?').join(',')
   const rs = await env.DB.prepare(
@@ -212,7 +276,27 @@ app.post('/webhooks/issues', async (c) => {
   const trimmedSource = source.trim()
   const trimmedEventId = eventId.trim()
 
-  // --- Rate limit (per source) --------------------------------------------
+  // --- Signature verification FIRST ----------------------------------------
+  // Verify HMAC before any side-effect writes (rate-limit counter, webhook_logs
+  // row, or idempotency record). This prevents an unauthenticated caller from
+  // (a) amplifying D1/KV writes by flooding requests, (b) poisoning the
+  // idempotency cache by guessing a future event_id, or (c) filling
+  // webhook_logs with attacker-controlled payload content.
+  const currentSecret =
+    (await c.env.KV.get('webhook:secret:current')) ?? c.env.WEBHOOK_SECRET
+  const sigOk = await verifyWebhookSignature(currentSecret, rawBody, signatureHeader)
+  if (!sigOk) {
+    await logPreAuthFailure(c.env, {
+      source: trimmedSource,
+      eventId: trimmedEventId,
+      payload: rawBody,
+      httpStatus: 403,
+      errorSummary: 'HMAC 签名校验失败',
+    })
+    return err(c, ErrorCodes.WEBHOOK_SIGNATURE_INVALID, '签名校验失败')
+  }
+
+  // --- Rate limit (per source, only after auth) ----------------------------
   const rl = await rateLimit(
     c.env.KV,
     `webhook:rate:${trimmedSource}`,
@@ -233,24 +317,6 @@ app.post('/webhooks/issues', async (c) => {
     return err(c, ErrorCodes.RATE_LIMITED, '请求过于频繁')
   }
 
-  // --- Signature verification ---------------------------------------------
-  const currentSecret =
-    (await c.env.KV.get('webhook:secret:current')) ?? c.env.WEBHOOK_SECRET
-  const sigOk = await verifyWebhookSignature(currentSecret, rawBody, signatureHeader)
-  if (!sigOk) {
-    await logIngestOutcome(c.env, {
-      source: trimmedSource,
-      eventId: trimmedEventId,
-      eventType: 'unknown',
-      payload: rawBody,
-      httpStatus: 403,
-      errorSummary: 'HMAC 签名校验失败',
-      issueId: null,
-      outcome: 'error',
-    })
-    return err(c, ErrorCodes.WEBHOOK_SIGNATURE_INVALID, '签名校验失败')
-  }
-
   // --- Idempotency replay --------------------------------------------------
   const existing = await readIdempotencyRecord(c.env.KV, trimmedSource, trimmedEventId)
   if (existing !== null) {
@@ -266,15 +332,15 @@ app.post('/webhooks/issues', async (c) => {
     // Error replays return the same error code family; use VALIDATION_FAILED
     // as a generic "the original request was rejected" signal since we did
     // not persist the original errorCode. This keeps the retry idempotent.
+    const replayStatus: 403 | 429 | 422 =
+      existing.httpStatus === 403 || existing.httpStatus === 429
+        ? existing.httpStatus
+        : 422
     return err(
       c,
       ErrorCodes.VALIDATION_FAILED,
       '事件已处理（之前拒绝，重放）',
-      existing.httpStatus === 403
-        ? 403
-        : existing.httpStatus === 429
-          ? 429
-          : 422,
+      replayStatus,
     )
   }
 
@@ -343,45 +409,74 @@ app.post('/webhooks/issues', async (c) => {
   const labelIds = body.labels ? await upsertLabelIds(c.env, body.labels) : []
 
   // --- Insert issue --------------------------------------------------------
-  // T010's r2-body helper is not yet in tree (parallel batch). Inline the
-  // body regardless for now; a follow-up will re-route large bodies to R2.
-  // TODO(T010): when `api/lib/r2-body.ts` lands, spill `body` >4096 bytes
-  //             to R2 and set body_r2_key here.
+  // Bodies larger than the R2 threshold spill into R2; D1 keeps `body` NULL
+  // and stores the R2 key so `GET /api/issues/:id` can merge on read.
   const issueId = randomHexId('iss_', 10)
   const timestamp = nowIso()
   const priority: IssuePriority = body.priority ?? DEFAULT_PRIORITY
-  const inlineBody = typeof body.body === 'string' ? body.body : null
+  const rawIncomingBody = typeof body.body === 'string' ? body.body : null
+
+  let inlineBody: string | null = rawIncomingBody
+  let bodyR2Key: string | null = null
+  if (rawIncomingBody !== null && shouldOverflow(rawIncomingBody)) {
+    try {
+      bodyR2Key = await writeBodyToR2(
+        c.env.R2,
+        issueBodyKey(issueId),
+        rawIncomingBody,
+      )
+      inlineBody = null
+    } catch (e) {
+      const summary =
+        e instanceof Error ? `R2 body write failed: ${e.message}` : 'R2 body write failed'
+      await logIngestOutcome(c.env, {
+        source: trimmedSource,
+        eventId: trimmedEventId,
+        eventType: 'issue.created',
+        payload: rawBody,
+        httpStatus: 500,
+        errorSummary: summary,
+        issueId: null,
+        outcome: 'error',
+      })
+      return err(c, ErrorCodes.INTERNAL_ERROR, '写入 issue body 失败')
+    }
+  }
 
   try {
-    await c.env.DB.prepare(
-      `INSERT INTO issues
-         (id, project_id, title, body, body_r2_key, status, priority, due_date,
-          external_ref, source, source_name, created_at, updated_at, archived_at)
-       VALUES (?, ?, ?, ?, NULL, 'todo', ?, ?, ?, 'webhook', ?, ?, ?, NULL)`,
-    )
-      .bind(
+    // Batch the issue INSERT with its label associations so a failure on the
+    // labels leg rolls back the issue row instead of leaving an orphan.
+    const stmts = [
+      c.env.DB.prepare(
+        `INSERT INTO issues
+           (id, project_id, title, body, body_r2_key, status, priority, due_date,
+            external_ref, source, source_name, created_at, updated_at, archived_at)
+         VALUES (?, ?, ?, ?, ?, 'todo', ?, ?, ?, 'webhook', ?, ?, ?, NULL)`,
+      ).bind(
         issueId,
         projectId,
         body.title,
         inlineBody,
+        bodyR2Key,
         priority,
         body.due_date ?? null,
         body.external_ref,
         trimmedSource,
         timestamp,
         timestamp,
-      )
-      .run()
-
-    for (const labelId of labelIds) {
-      await c.env.DB.prepare(
-        `INSERT INTO issue_labels (issue_id, label_id) VALUES (?, ?)
-         ON CONFLICT(issue_id, label_id) DO NOTHING`,
-      )
-        .bind(issueId, labelId)
-        .run()
-    }
+      ),
+      ...labelIds.map((labelId) =>
+        c.env.DB.prepare(
+          `INSERT INTO issue_labels (issue_id, label_id) VALUES (?, ?)
+           ON CONFLICT(issue_id, label_id) DO NOTHING`,
+        ).bind(issueId, labelId),
+      ),
+    ]
+    await c.env.DB.batch(stmts)
   } catch (e) {
+    if (bodyR2Key) {
+      await deleteBodyFromR2(c.env.R2, bodyR2Key)
+    }
     const summary = e instanceof Error ? e.message : 'DB insert failed'
     await logIngestOutcome(c.env, {
       source: trimmedSource,
