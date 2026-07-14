@@ -74,13 +74,17 @@ export async function authenticate(c: EnvContext): Promise<JwtClaims> {
   return claims
 }
 
+/** Cloudflare KV enforces a 60-second minimum for expirationTtl. */
+const KV_MIN_TTL_SECONDS = 60
+
 /**
  * Add the jti to the KV blacklist for the token's remaining lifetime. The TTL
- * is clamped to at least 1 second so KV accepts it even for tokens near expiry.
+ * is clamped to the 60-second KV minimum; a small over-retention is harmless
+ * because {@link verifyJwt} already rejects tokens past `exp`.
  */
 export async function revoke(c: EnvContext, claims: JwtClaims): Promise<void> {
   const now = Math.floor(Date.now() / 1000)
   const remaining = claims.exp - now
-  const ttl = remaining > 1 ? remaining : 1
+  const ttl = Math.max(KV_MIN_TTL_SECONDS, remaining)
   await c.env.KV.put(JWT_BLACKLIST_PREFIX + claims.jti, '1', { expirationTtl: ttl })
 }

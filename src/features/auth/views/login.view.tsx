@@ -37,11 +37,31 @@ interface RateLimitState {
   seconds: number
 }
 
+/**
+ * Extract the rate-limit lockout duration from the server's user-facing message.
+ *
+ * The server currently returns a Chinese string like `请 5 分钟后重试`. We
+ * require the explicit unit (`分钟` / `min` / `minute` / `s` / `秒`) so a
+ * message that happens to contain a stray number (error code, attempt count)
+ * won't be mis-read. Falls back to `RATE_LIMIT_DEFAULT_MINUTES` when neither
+ * pattern matches.
+ */
 function extractRateLimitSeconds(message: string): number {
-  const match = message.match(/\d+/)
-  const minutes = match ? parseInt(match[0], 10) : RATE_LIMIT_DEFAULT_MINUTES
-  const safeMinutes = Number.isFinite(minutes) && minutes > 0 ? minutes : RATE_LIMIT_DEFAULT_MINUTES
-  return Math.min(safeMinutes * 60, RATE_LIMIT_MAX_SECONDS)
+  const minutesMatch = message.match(/(\d+)\s*(?:分钟|min(?:ute)?s?)/i)
+  if (minutesMatch && minutesMatch[1]) {
+    const minutes = parseInt(minutesMatch[1], 10)
+    if (Number.isFinite(minutes) && minutes > 0) {
+      return Math.min(minutes * 60, RATE_LIMIT_MAX_SECONDS)
+    }
+  }
+  const secondsMatch = message.match(/(\d+)\s*(?:秒|s(?:ec(?:ond)?)?s?)\b/i)
+  if (secondsMatch && secondsMatch[1]) {
+    const seconds = parseInt(secondsMatch[1], 10)
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return Math.min(seconds, RATE_LIMIT_MAX_SECONDS)
+    }
+  }
+  return Math.min(RATE_LIMIT_DEFAULT_MINUTES * 60, RATE_LIMIT_MAX_SECONDS)
 }
 
 export function LoginView() {

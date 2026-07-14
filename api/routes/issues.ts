@@ -194,9 +194,12 @@ app.get('/', async (c) => {
     binds.push(...q.labels, q.labels.length)
   }
   if (q.q) {
-    const like = `%${q.q}%`
-    where.push('(title LIKE ? OR body LIKE ?)')
-    binds.push(like, like)
+    // Only searches title. Body text is not searchable via LIKE — bodies above
+    // R2_BODY_INLINE_THRESHOLD_BYTES live in R2 with `body IS NULL`, so a body
+    // LIKE clause silently excludes overflowed rows. Keeping title-only avoids
+    // that inconsistency; introduce FTS5 when body search is required.
+    where.push('title LIKE ?')
+    binds.push(`%${q.q}%`)
   }
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''
@@ -204,18 +207,26 @@ app.get('/', async (c) => {
   const orderDir = q.order === 'asc' ? 'ASC' : 'DESC'
   const offset = (q.page - 1) * q.page_size
 
-  // total count
+  // Explicit column list — omit `body` (potentially many KB per row when it
+  // stays inline) since list views only render title/status/etc. Callers that
+  // need body_full go through GET /:id.
+  const LIST_COLS =
+    'id, project_id, title, NULL AS body, body_r2_key, status, priority, ' +
+    'due_date, external_ref, source, source_name, created_at, updated_at, archived_at'
+
+  // Count + page share the same WHERE and have no data dependency — run in parallel.
   const countStmt = c.env.DB.prepare(
     `SELECT COUNT(*) AS c FROM ${TABLES.issues} ${whereSql}`,
   ).bind(...binds)
-  const countRow = await countStmt.first<{ c: number }>()
-  const total = countRow?.c ?? 0
-
-  // page rows
   const pageStmt = c.env.DB.prepare(
-    `SELECT * FROM ${TABLES.issues} ${whereSql} ORDER BY ${orderCol} ${orderDir} LIMIT ? OFFSET ?`,
+    `SELECT ${LIST_COLS} FROM ${TABLES.issues} ${whereSql} ORDER BY ${orderCol} ${orderDir} LIMIT ? OFFSET ?`,
   ).bind(...binds, q.page_size, offset)
-  const pageRs = await pageStmt.all<IssueRow>()
+
+  const [countRow, pageRs] = await Promise.all([
+    countStmt.first<{ c: number }>(),
+    pageStmt.all<IssueRow>(),
+  ])
+  const total = countRow?.c ?? 0
   const rows = pageRs.results ?? []
 
   const labelsByIssue = await fetchLabelsForIssues(
@@ -253,16 +264,18 @@ app.post('/', async (c) => {
     return err(c, ErrorCodes.NOT_FOUND, '项目不存在')
   }
 
-  // all label_ids must exist
+  // Fetch full label rows in the same round-trip we already pay for validation,
+  // so we can synthesize the response without re-reading after INSERT.
+  let labelRows: LabelRow[] = []
   if (data.label_ids.length > 0) {
     const placeholders = data.label_ids.map(() => '?').join(',')
     const labelRs = await c.env.DB.prepare(
-      `SELECT id FROM ${TABLES.labels} WHERE id IN (${placeholders})`,
+      `SELECT * FROM ${TABLES.labels} WHERE id IN (${placeholders})`,
     )
       .bind(...data.label_ids)
-      .all<{ id: string }>()
-    const foundCount = labelRs.results?.length ?? 0
-    if (foundCount !== data.label_ids.length) {
+      .all<LabelRow>()
+    labelRows = labelRs.results ?? []
+    if (labelRows.length !== data.label_ids.length) {
       return err(c, ErrorCodes.NOT_FOUND, '标签不存在')
     }
   }
@@ -313,12 +326,25 @@ app.post('/', async (c) => {
     await c.env.DB.batch(statements)
   }
 
-  const row = await loadIssueRow(c.env.DB, id)
-  if (!row) {
-    return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+  // Synthesize the response from values we already have — no extra SELECTs.
+  const labels = labelRows.map(rowToLabel)
+  const issue: Issue = {
+    id,
+    project_id: data.project_id,
+    title: data.title,
+    body: insertBody,
+    body_r2_key: insertBodyR2Key,
+    status: data.status,
+    priority: data.priority,
+    due_date: data.due_date ?? null,
+    external_ref: null,
+    source: 'manual',
+    source_name: null,
+    labels,
+    created_at: now,
+    updated_at: now,
+    archived_at: null,
   }
-  const labelsByIssue = await fetchLabelsForIssues(c.env.DB, [id])
-  const issue = rowToIssue(row, labelsByIssue.get(id) ?? [])
   return ok(c, issue, { httpStatus: 201 })
 })
 
@@ -453,11 +479,15 @@ app.patch('/:id', async (c) => {
     }
   }
 
-  // Always bump updated_at on any mutation attempt.
+  // Always bump updated_at on any mutation attempt, including a label_ids-only
+  // patch (label associations are written below outside the main UPDATE).
+  const hasRealColumnPatch = sets.length > 0
+  const hasLabelPatch = patch.label_ids !== undefined
+  const updatedAt = nowIso()
   sets.push('updated_at = ?')
-  binds.push(nowIso())
+  binds.push(updatedAt)
 
-  if (sets.length > 1 /* more than just updated_at */) {
+  if (hasRealColumnPatch || hasLabelPatch) {
     await c.env.DB.prepare(
       `UPDATE ${TABLES.issues} SET ${sets.join(', ')} WHERE id = ?`,
     )
@@ -488,9 +518,27 @@ app.patch('/:id', async (c) => {
     await deleteBodyFromR2(c.env.R2, r2KeyToDelete)
   }
 
-  const updated = await loadIssueRow(c.env.DB, id)
-  if (!updated) {
-    return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+  // Synthesize the updated row from `existing` + the patch — no second SELECT.
+  const updated: IssueRow = {
+    ...existing,
+    ...(patch.project_id !== undefined ? { project_id: patch.project_id } : {}),
+    ...(patch.title !== undefined ? { title: patch.title } : {}),
+    ...(patch.status !== undefined
+      ? {
+          status: patch.status,
+          archived_at: patch.status === 'archived' ? updatedAt : null,
+        }
+      : {}),
+    ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
+    ...(patch.due_date !== undefined ? { due_date: patch.due_date ?? null } : {}),
+    ...(patch.body !== undefined
+      ? patch.body === null
+        ? { body: null, body_r2_key: null }
+        : shouldOverflow(patch.body)
+          ? { body: null, body_r2_key: issueBodyKey(id) }
+          : { body: patch.body, body_r2_key: null }
+      : {}),
+    updated_at: updatedAt,
   }
   const labelsByIssue = await fetchLabelsForIssues(c.env.DB, [id])
   return ok(c, rowToIssue(updated, labelsByIssue.get(id) ?? []))

@@ -14,11 +14,14 @@ import {
 import { cn } from '@/lib/utils'
 import type { Issue, IssuePriority } from '@/lib/api-types'
 
+// Priority chips consume the `--priority-p0..p3` HSL tokens from globals.css
+// so light/dark/theme changes flow through one source of truth rather than
+// hand-tuned Tailwind palettes in each view.
 const PRIORITY_CHIP_CLASS: Record<IssuePriority, string> = {
-  p0: 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400',
-  p1: 'border-orange-500/50 bg-orange-500/10 text-orange-600 dark:text-orange-400',
-  p2: 'border-blue-500/50 bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  p3: 'border-slate-400/50 bg-slate-400/10 text-slate-600 dark:text-slate-400',
+  p0: 'border-[hsl(var(--priority-p0)/0.5)] bg-[hsl(var(--priority-p0)/0.1)] text-[hsl(var(--priority-p0))]',
+  p1: 'border-[hsl(var(--priority-p1)/0.5)] bg-[hsl(var(--priority-p1)/0.1)] text-[hsl(var(--priority-p1))]',
+  p2: 'border-[hsl(var(--priority-p2)/0.5)] bg-[hsl(var(--priority-p2)/0.1)] text-[hsl(var(--priority-p2))]',
+  p3: 'border-[hsl(var(--priority-p3)/0.5)] bg-[hsl(var(--priority-p3)/0.1)] text-[hsl(var(--priority-p3))]',
 }
 
 const PRIORITY_LABEL: Record<IssuePriority, string> = {
@@ -28,20 +31,26 @@ const PRIORITY_LABEL: Record<IssuePriority, string> = {
   p3: '优先级 P3',
 }
 
-const TODAY_ISO = (() => {
+/**
+ * Local calendar date (YYYY-MM-DD) for "today". Computed on each call — not
+ * cached — so leaving the app open across midnight, or a user in a non-UTC
+ * timezone, still gets the right "今天/逾期" classification. `due_date` is a
+ * calendar-local value in the model, so we compare against local parts here.
+ */
+function todayIso(): string {
   const d = new Date()
-  const y = d.getUTCFullYear()
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-  const day = String(d.getUTCDate()).padStart(2, '0')
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
-})()
+}
 
 function isOverdue(due: string): boolean {
-  return due < TODAY_ISO
+  return due < todayIso()
 }
 
 function isToday(due: string): boolean {
-  return due === TODAY_ISO
+  return due === todayIso()
 }
 
 function formatDue(due: string): string {
@@ -120,10 +129,14 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         {shownLabels.map((label) => (
           <span
             key={label.id}
-            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] max-w-[6rem]"
-            style={{ backgroundColor: label.color, color: '#fff' }}
+            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[10px] max-w-[6rem] text-foreground"
             title={label.name}
           >
+            <span
+              aria-hidden
+              className="h-1.5 w-1.5 flex-none rounded-full"
+              style={{ backgroundColor: label.color }}
+            />
             <span className="truncate">{label.name}</span>
           </span>
         ))}

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { request } from '@/lib/request'
-import type { IssueDetail, Comment } from '@/lib/api-types'
+import type { IssueDetail, Comment, Label } from '@/lib/api-types'
 import type { UpdateIssueBody } from '@/lib/validators/issue'
 import type { CreateCommentBody } from '@/lib/validators/comment'
 import type { CommentsData } from './types'
@@ -23,13 +23,24 @@ export function useUpdateIssueMutation() {
       await qc.cancelQueries({ queryKey: ['issue-detail', id] })
       const prev = qc.getQueryData<IssueDetail>(['issue-detail', id])
       if (prev) {
-        // shallow-merge scalar fields; labels/label_ids omitted here (optimistic
-        // labels are harder — do server-authoritative on rollback via onSuccess/onSettled).
+        // Resolve label_ids against the labels list cache so `issue.labels`
+        // reflects the pending state — otherwise rapid toggles read stale
+        // labels and race last-write-wins on the server.
+        const { label_ids, ...scalarPatch } = body
+        let nextLabels = prev.labels
+        if (label_ids !== undefined) {
+          const cached = qc.getQueryData<Label[]>(['labels', 'list']) ?? []
+          const byId = new Map(cached.map((l) => [l.id, l]))
+          nextLabels = label_ids
+            .map((lid) => byId.get(lid) ?? prev.labels.find((l) => l.id === lid))
+            .filter((l): l is Label => l !== undefined)
+        }
         qc.setQueryData<IssueDetail>(['issue-detail', id], {
           ...prev,
-          ...body,
+          ...scalarPatch,
+          labels: nextLabels,
           updated_at: new Date().toISOString(),
-        } as IssueDetail)
+        })
       }
       return { prev }
     },
@@ -40,10 +51,25 @@ export function useUpdateIssueMutation() {
     onSuccess: (issue) => {
       qc.setQueryData(['issue-detail', issue.id], issue)
     },
-    onSettled: (_data, _e, { id }) => {
+    onSettled: (_data, _e, { id, body }) => {
       void qc.invalidateQueries({ queryKey: ['issue-detail', id] })
-      void qc.invalidateQueries({ queryKey: ['board'] })
-      void qc.invalidateQueries({ queryKey: ['issue-list'] })
+      // Scope broader invalidations to fields that actually affect those caches
+      // so a rapid label-only edit doesn't refetch every list/board query.
+      const affectsBoard =
+        body.status !== undefined ||
+        body.priority !== undefined ||
+        body.project_id !== undefined
+      const affectsList =
+        affectsBoard ||
+        body.title !== undefined ||
+        body.due_date !== undefined ||
+        body.label_ids !== undefined
+      if (affectsBoard) {
+        void qc.invalidateQueries({ queryKey: ['board'] })
+      }
+      if (affectsList) {
+        void qc.invalidateQueries({ queryKey: ['issue-list'] })
+      }
     },
   })
 }

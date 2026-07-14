@@ -13,6 +13,9 @@
  */
 import type { KVNamespace } from '@cloudflare/workers-types/2023-07-01'
 
+/** Cloudflare KV enforces a 60-second minimum for expirationTtl. */
+const KV_MIN_TTL_SECONDS = 60
+
 export interface RateLimitResult {
   ok: boolean
   count: number
@@ -66,7 +69,9 @@ export async function rateLimit(
 
   if (existing === null) {
     const entry: RateEntry = { count: 1, startedAt: now, windowSec }
-    await kv.put(key, JSON.stringify(entry), { expirationTtl: windowSec })
+    await kv.put(key, JSON.stringify(entry), {
+      expirationTtl: Math.max(KV_MIN_TTL_SECONDS, windowSec),
+    })
     return { ok: true, count: 1, limit, remaining: limit - 1, resetSec: windowSec }
   }
 
@@ -81,8 +86,8 @@ export async function rateLimit(
     startedAt: existing.startedAt,
     windowSec: existing.windowSec,
   }
-  // Preserve the original window by using the remaining TTL (>=1s).
-  const remainingTtl = Math.max(1, resetSec)
+  // Preserve the original window; clamp to KV's 60s minimum near expiry.
+  const remainingTtl = Math.max(KV_MIN_TTL_SECONDS, resetSec)
   await kv.put(key, JSON.stringify(nextEntry), { expirationTtl: remainingTtl })
   return {
     ok: nextCount <= limit,
@@ -110,21 +115,27 @@ export async function rateLimitLoginFailure(
 
   if (existing === null) {
     const entry: RateEntry = { count: 1, startedAt: now, windowSec: freezeSec }
-    await kv.put(key, JSON.stringify(entry), { expirationTtl: freezeSec })
+    await kv.put(key, JSON.stringify(entry), {
+      expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
+    })
     return { ok: true, count: 1, limit, remaining: limit - 1, resetSec: freezeSec }
   }
 
   if (existing.count >= limit) {
     // Freeze is active — refresh the TTL so the window keeps sliding forward.
     const pinned: RateEntry = { count: limit, startedAt: now, windowSec: freezeSec }
-    await kv.put(key, JSON.stringify(pinned), { expirationTtl: freezeSec })
+    await kv.put(key, JSON.stringify(pinned), {
+      expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
+    })
     return { ok: false, count: limit, limit, remaining: 0, resetSec: freezeSec }
   }
 
   const nextCount = existing.count + 1
   if (nextCount >= limit) {
     const pinned: RateEntry = { count: limit, startedAt: now, windowSec: freezeSec }
-    await kv.put(key, JSON.stringify(pinned), { expirationTtl: freezeSec })
+    await kv.put(key, JSON.stringify(pinned), {
+      expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
+    })
     return { ok: false, count: limit, limit, remaining: 0, resetSec: freezeSec }
   }
 
@@ -134,7 +145,9 @@ export async function rateLimitLoginFailure(
     startedAt: existing.startedAt,
     windowSec: existing.windowSec,
   }
-  await kv.put(key, JSON.stringify(nextEntry), { expirationTtl: resetSec })
+  await kv.put(key, JSON.stringify(nextEntry), {
+    expirationTtl: Math.max(KV_MIN_TTL_SECONDS, resetSec),
+  })
   return {
     ok: true,
     count: nextCount,

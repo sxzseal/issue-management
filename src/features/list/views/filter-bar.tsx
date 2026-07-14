@@ -15,23 +15,10 @@ import type { Project, IssueStatus, IssuePriority } from '@/lib/api-types'
 import { cn } from '@/lib/utils'
 import type { ListParams } from '../types'
 import type { ListParamActions } from '../use-list-params'
+import { PRIORITY_LABEL, STATUS_LABEL } from '../status-visuals'
 
 const STATUS_OPTIONS: readonly IssueStatus[] = ['todo', 'in_progress', 'done', 'archived']
 const PRIORITY_OPTIONS: readonly IssuePriority[] = ['p0', 'p1', 'p2', 'p3']
-
-const STATUS_LABEL: Record<IssueStatus, string> = {
-  todo: '待办',
-  in_progress: '进行中',
-  done: '已完成',
-  archived: '已归档',
-}
-
-const PRIORITY_LABEL: Record<IssuePriority, string> = {
-  p0: 'P0',
-  p1: 'P1',
-  p2: 'P2',
-  p3: 'P3',
-}
 
 const projectsQuery = queryOptions({
   queryKey: ['projects', 'list'] as const,
@@ -61,12 +48,21 @@ function useDebouncedValue<T>(value: T, ms: number): T {
  * Pushes the debounced search text into ListParams. Encapsulated in a hook
  * so the calling component stays effect-free. `actions` is stashed in a ref
  * so URL churn from other filters doesn't refire this effect.
+ *
+ * The initial-mount run is skipped: on entry to `/list?q=foo&page=3`,
+ * `debounced` starts equal to `params.q`, and firing setFilter unconditionally
+ * would clobber `page` back to 1 and violate AC-038 (refresh reproduces state).
  */
 function useSyncSearchTerm(local: string, actions: ListParamActions): void {
   const debounced = useDebouncedValue(local, 250)
   const actionsRef = useRef(actions)
   actionsRef.current = actions
+  const isInitial = useRef(true)
   useEffect(() => {
+    if (isInitial.current) {
+      isInitial.current = false
+      return
+    }
     actionsRef.current.setFilter({ q: debounced.trim() || undefined, page: 1 })
   }, [debounced])
 }

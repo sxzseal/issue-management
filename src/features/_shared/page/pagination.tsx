@@ -34,8 +34,11 @@ export function Pagination({
   className,
 }: PaginationProps) {
   const lastPage = Math.max(1, Math.ceil(total / Math.max(1, pageSize)))
-  const isFirst = page <= 1
-  const isLast = page >= lastPage
+  // Clamp the incoming page so a stale value (e.g. filter shrank `total`) can't
+  // leave Prev/Next in an inconsistent state or show "第 5 / 1 页".
+  const safePage = Math.min(Math.max(1, page), lastPage)
+  const isFirst = safePage <= 1
+  const isLast = safePage >= lastPage
 
   return (
     <div
@@ -81,19 +84,19 @@ export function Pagination({
             size="icon"
             aria-label="上一页"
             disabled={isFirst}
-            onClick={() => onPageChange(page - 1)}
+            onClick={() => onPageChange(safePage - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="mx-2 whitespace-nowrap text-muted-foreground">
-            第 {page} / {lastPage} 页
+            第 {safePage} / {lastPage} 页
           </span>
           <Button
             variant="outline"
             size="icon"
             aria-label="下一页"
             disabled={isLast}
-            onClick={() => onPageChange(page + 1)}
+            onClick={() => onPageChange(safePage + 1)}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

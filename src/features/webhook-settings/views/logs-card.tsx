@@ -38,8 +38,8 @@ function formatDateTime(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number): string => String(n).padStart(2, '0')
   return (
-    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
-    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}`
   )
 }
 
@@ -68,12 +68,12 @@ function StatusBadge({ status }: StatusBadgeProps) {
       className={cn(
         'border-transparent font-mono text-[11px] tabular-nums',
         kind === 'success' &&
-          'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+          'bg-[hsl(var(--feedback-success)/0.15)] text-[hsl(var(--feedback-success))]',
         kind === 'client' && 'bg-destructive/15 text-destructive dark:bg-destructive/25',
         kind === 'ratelimit' &&
-          'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+          'bg-[hsl(var(--feedback-ratelimit)/0.15)] text-[hsl(var(--feedback-ratelimit))]',
         kind === 'validation' &&
-          'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400',
+          'bg-[hsl(var(--feedback-warning)/0.15)] text-[hsl(var(--feedback-warning))]',
         kind === 'server' &&
           'bg-destructive/20 text-destructive dark:bg-destructive/30',
         kind === 'other' && 'bg-muted text-muted-foreground'
