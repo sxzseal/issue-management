@@ -52,26 +52,44 @@ function useDebouncedValue<T>(value: T, ms: number): T {
 }
 
 /**
- * Pushes the debounced search text into ListParams. Encapsulated in a hook
- * so the calling component stays effect-free. `actions` is stashed in a ref
- * so URL churn from other filters doesn't refire this effect.
+ * Bi-directional sync between the local input state and `params.q`:
+ * - forward: debounced local edits → setFilter (unless the incoming debounced
+ *   value equals the URL — that's the initial mount or a value we just wrote).
+ * - reverse: when `params.q` changes externally (side-nav navigation, clear
+ *   button, browser back), push it into `setLocal` so the input reflects the URL.
  *
- * The initial-mount run is skipped: on entry to `/list?q=foo&page=3`,
- * `debounced` starts equal to `params.q`, and firing setFilter unconditionally
- * would clobber `page` back to 1 and violate AC-038 (refresh reproduces state).
+ * A `lastWritten` ref tracks the last string we pushed to params so we don't
+ * re-fire the reverse sync from our own write, avoiding a double-render loop.
+ *
+ * AC-038: refreshing `/list?q=foo&page=3` must not clobber page → we skip the
+ * forward setFilter on initial mount and whenever debounced already matches
+ * params.q.
  */
-function useSyncSearchTerm(local: string, actions: ListParamActions): void {
+function useSyncSearchTerm(
+  local: string,
+  setLocal: (v: string) => void,
+  params: ListParams,
+  actions: ListParamActions,
+): void {
   const debounced = useDebouncedValue(local, 250)
   const actionsRef = useRef(actions)
   actionsRef.current = actions
-  const isInitial = useRef(true)
+  const lastWritten = useRef<string>(params.q ?? '')
+
   useEffect(() => {
-    if (isInitial.current) {
-      isInitial.current = false
-      return
-    }
-    actionsRef.current.setFilter({ q: debounced.trim() || undefined, page: 1 })
-  }, [debounced])
+    const next = debounced.trim()
+    const current = params.q ?? ''
+    if (next === current) return
+    lastWritten.current = next
+    actionsRef.current.setFilter({ q: next || undefined, page: 1 })
+  }, [debounced, params.q])
+
+  useEffect(() => {
+    const remote = params.q ?? ''
+    if (remote === lastWritten.current) return
+    lastWritten.current = remote
+    setLocal(remote)
+  }, [params.q, setLocal])
 }
 
 function toggleArray<T>(arr: readonly T[] | undefined, value: T): T[] {
@@ -113,7 +131,7 @@ FilterTrigger.displayName = 'FilterTrigger'
 
 export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
   const [localQ, setLocalQ] = useState(params.q ?? '')
-  useSyncSearchTerm(localQ, actions)
+  useSyncSearchTerm(localQ, setLocalQ, params, actions)
 
   const { data: projects } = useQuery(projectsQuery)
 

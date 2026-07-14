@@ -9,7 +9,7 @@
  * the confirmation modal.
  */
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useNavigationType } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Check, Link as LinkIcon, Package, PackageOpen, Trash2 } from 'lucide-react'
 
@@ -32,6 +32,7 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
   const update = useUpdateIssueMutation()
   const { data: projects } = useQuery(projectsQueryOptions)
   const navigate = useNavigate()
+  const navigationType = useNavigationType()
 
   const project = projects?.find((p) => p.id === issue.project_id)
   const archived = issue.status === 'archived'
@@ -40,8 +41,11 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
     void copy(window.location.href, '链接已复制')
   }
 
+  // Only walk back one step when React Router pushed the current entry (i.e.
+  // the previous entry is also inside the SPA). On first entry from an external
+  // link `navigationType` is 'POP', which would otherwise leave the app.
   const goBack = () => {
-    if (window.history.length > 1) {
+    if (navigationType === 'PUSH') {
       navigate(-1)
     } else {
       void navigate('/list')

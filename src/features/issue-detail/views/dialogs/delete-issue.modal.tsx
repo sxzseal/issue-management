@@ -32,11 +32,9 @@ export function DeleteIssueModal({ issueId, open, onOpenChange }: DeleteIssueMod
     del.mutate(issueId, {
       onSuccess: () => {
         onOpenChange(false)
-        if (window.history.length > 1) {
-          navigate(-1)
-        } else {
-          void navigate('/list', { replace: true })
-        }
+        // Always land on a known-safe page: the just-deleted issue is now 404,
+        // and `navigate(-1)` after external-link entry would leave the SPA.
+        void navigate('/list', { replace: true })
       },
     })
   }

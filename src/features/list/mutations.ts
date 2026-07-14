@@ -6,7 +6,8 @@ export function useDeleteIssueMutation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => request<null>(`/api/issues/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onSuccess: (_r, id) => {
+      qc.removeQueries({ queryKey: ['issue-detail', id] })
       void qc.invalidateQueries({ queryKey: ['issue-list'] })
       void qc.invalidateQueries({ queryKey: ['board'] })
       toast.success('已删除 issue')
