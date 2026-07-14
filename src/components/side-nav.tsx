@@ -2,7 +2,7 @@
  * SideNav — 持久化左侧导航
  * 顶部为功能入口；下方是从 /api/projects 拉取的项目列表，含「管理」入口。
  */
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -51,30 +51,16 @@ interface ColoredNavRowProps {
   to: string
   color: string
   name: string
-  paramKey: 'project_id' | 'labels'
-  paramValue: string
+  isActive: boolean
 }
 
 /**
  * Shared row for the projects / labels sidebar lists: a colored dot + name +
- * active/hover ring. Both lists used to inline this markup verbatim.
- *
- * NavLink's default isActive only compares pathname — every item points at
- * `/list?...`, so a naive check lights up all of them at once. We compute
- * active state from the current URL's query params instead.
+ * active/hover ring. The `isActive` prop is computed once in the parent from
+ * a memoized URLSearchParams, so N rows no longer each parse the search string
+ * and subscribe to router updates.
  */
-function ColoredNavRow({ to, color, name, paramKey, paramValue }: ColoredNavRowProps) {
-  const location = useLocation()
-  const params = new URLSearchParams(location.search)
-  const raw = params.get(paramKey) ?? ''
-  const isActive =
-    location.pathname === '/list' &&
-    (paramKey === 'labels'
-      ? raw
-          .split(',')
-          .map((s) => s.trim())
-          .includes(paramValue)
-      : raw === paramValue)
+function ColoredNavRow({ to, color, name, isActive }: ColoredNavRowProps) {
   return (
     <li>
       <NavLink
@@ -100,6 +86,13 @@ function ColoredNavRow({ to, color, name, paramKey, paramValue }: ColoredNavRowP
 export function SideNav() {
   const [projectManageOpen, setProjectManageOpen] = useState(false)
   const projects = useQuery(projectsQueryOptions)
+  const location = useLocation()
+
+  const activeProjectId = useMemo(() => {
+    if (location.pathname !== '/list') return null
+    const params = new URLSearchParams(location.search)
+    return params.get('project_id')
+  }, [location.pathname, location.search])
 
   return (
     <nav
@@ -156,8 +149,7 @@ export function SideNav() {
                 to={`/list?project_id=${encodeURIComponent(p.id)}`}
                 color={p.color}
                 name={p.name}
-                paramKey="project_id"
-                paramValue={p.id}
+                isActive={activeProjectId === p.id}
               />
             ))}
           </ul>

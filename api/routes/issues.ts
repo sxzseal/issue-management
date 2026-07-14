@@ -101,10 +101,28 @@ async function fetchLabelsForIssues(
   return out
 }
 
-/** Load a single issue row by id; null if not found. */
+/** Load a single issue row by id; null if not found. Full row includes `body`. */
 async function loadIssueRow(db: D1Database, id: string): Promise<IssueRow | null> {
   const row = await db
     .prepare(`SELECT * FROM ${TABLES.issues} WHERE id = ?`)
+    .bind(id)
+    .first<IssueRow>()
+  return row ?? null
+}
+
+/**
+ * Meta-only load — `body` is projected to NULL. Used by PATCH and DELETE which
+ * only need routing/ownership metadata + `body_r2_key`. Inline bodies can be up
+ * to 4KiB (R2_BODY_INLINE_THRESHOLD_BYTES); this saves that per-request read
+ * bandwidth + JSON serialization on hot mutation paths.
+ */
+async function loadIssueRowMeta(db: D1Database, id: string): Promise<IssueRow | null> {
+  const row = await db
+    .prepare(
+      `SELECT id, project_id, title, NULL AS body, body_r2_key, status, priority,
+              due_date, external_ref, source, source_name, created_at, updated_at, archived_at
+         FROM ${TABLES.issues} WHERE id = ?`,
+    )
     .bind(id)
     .first<IssueRow>()
   return row ?? null
@@ -194,12 +212,13 @@ app.get('/', async (c) => {
     binds.push(...q.labels, q.labels.length)
   }
   if (q.q) {
-    // Only searches title. Body text is not searchable via LIKE — bodies above
+    // Prefix-only LIKE so `title` can use an index (SQLite cannot use an index
+    // with a leading `%`). Only searches title — bodies above
     // R2_BODY_INLINE_THRESHOLD_BYTES live in R2 with `body IS NULL`, so a body
-    // LIKE clause silently excludes overflowed rows. Keeping title-only avoids
-    // that inconsistency; introduce FTS5 when body search is required.
+    // LIKE clause silently excludes overflowed rows. Introduce FTS5 when
+    // full-text (mid-string) body search is required.
     where.push('title LIKE ?')
-    binds.push(`%${q.q}%`)
+    binds.push(`${q.q}%`)
   }
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''
@@ -392,7 +411,7 @@ app.patch('/:id', async (c) => {
   }
   const patch = parsed.data
 
-  const existing = await loadIssueRow(c.env.DB, id)
+  const existing = await loadIssueRowMeta(c.env.DB, id)
   if (!existing) {
     return err(c, ErrorCodes.NOT_FOUND, ErrorMessages[ErrorCodes.NOT_FOUND])
   }
@@ -587,7 +606,7 @@ app.patch('/:id/status', async (c) => {
 // -----------------------------------------------------------------------------
 app.delete('/:id', async (c) => {
   const id = c.req.param('id')
-  const existing = await loadIssueRow(c.env.DB, id)
+  const existing = await loadIssueRowMeta(c.env.DB, id)
   if (!existing) {
     return err(c, ErrorCodes.NOT_FOUND, ErrorMessages[ErrorCodes.NOT_FOUND])
   }

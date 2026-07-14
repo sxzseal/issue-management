@@ -4,7 +4,7 @@
  * has keyboard focus). Delete lives under a hover-revealed dropdown; a small
  * inline dialog confirms before firing the mutation.
  */
-import { useState, type MouseEvent, type KeyboardEvent } from 'react'
+import { memo, useMemo, useState, type MouseEvent, type KeyboardEvent } from 'react'
 import { Trash2, Webhook as WebhookIcon } from 'lucide-react'
 import type { Issue, Label } from '@/lib/api-types'
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -83,9 +83,14 @@ function LabelChips({ labels }: { labels: Label[] }) {
   )
 }
 
-export function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
+export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const deleteMutation = useDeleteIssueMutation()
+
+  // formatRelative is pure over updated_at; memoize so the string doesn't churn
+  // when the row re-renders for reasons unrelated to updated_at (e.g. sibling
+  // row activation flipping a shared parent state).
+  const updatedLabel = useMemo(() => formatRelative(issue.updated_at), [issue.updated_at])
 
   const handleRowClick = (e: MouseEvent<HTMLTableRowElement>) => {
     // Ignore clicks that originated in an interactive descendant.
@@ -186,7 +191,7 @@ export function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
           {formatDate(issue.due_date)}
         </TableCell>
         <TableCell className="hidden lg:table-cell whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-          {formatRelative(issue.updated_at)}
+          {updatedLabel}
         </TableCell>
         <TableCell className="sticky right-0 z-10 w-[88px] bg-background pr-4 text-center shadow-[inset_1px_0_0_0_hsl(var(--border))] group-hover:bg-muted/50">
           <Button
@@ -236,4 +241,4 @@ export function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
       </Dialog>
     </>
   )
-}
+})

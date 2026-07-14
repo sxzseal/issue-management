@@ -4,6 +4,7 @@
  * click + keyboard (Enter/Space) to satisfy list<>link semantics without
  * putting an <a> inside a <tr>.
  */
+import { useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import type { Issue } from '@/lib/api-types'
@@ -61,7 +62,14 @@ function SortHeader({ field, label, params, onSortClick, className }: SortHeader
 
 export function IssueTable({ className, issues, params, actions }: IssueTableProps) {
   const navigate = useNavigate()
-  const handleRowActivate = (id: string) => navigate(`/issue/${id}`)
+  // Stable identity so memoized IssueTableRow doesn't re-render on unrelated
+  // ListView state churn (search debounce, modal open/close).
+  const handleRowActivate = useCallback(
+    (id: string) => {
+      void navigate(`/issue/${id}`)
+    },
+    [navigate],
+  )
 
   return (
     <div className={cn('flex flex-1 min-h-0 flex-col overflow-hidden', className)}>
