@@ -23,6 +23,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     target: 'es2022',
+    chunkSizeWarningLimit: 280,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -40,6 +41,9 @@ export default defineConfig({
             '@radix-ui/react-tabs',
             '@radix-ui/react-tooltip',
           ],
+          markdown: ['react-markdown', 'remark-gfm'],
+          icons: ['lucide-react'],
+          form: ['react-hook-form', '@hookform/resolvers', 'zod'],
         },
       },
     },
