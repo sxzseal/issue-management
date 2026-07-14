@@ -25,7 +25,7 @@ const PRIORITY_CHIP_CLASS: Record<IssuePriority, string> = {
   p3: 'border-[hsl(var(--priority-p3)/0.5)] bg-[hsl(var(--priority-p3)/0.1)] text-[hsl(var(--priority-p3))]',
 }
 
-const PRIORITY_LABEL: Record<IssuePriority, string> = {
+const PRIORITY_ARIA_LABEL: Record<IssuePriority, string> = {
   p0: '优先级 P0',
   p1: '优先级 P1',
   p2: '优先级 P2',
@@ -33,10 +33,11 @@ const PRIORITY_LABEL: Record<IssuePriority, string> = {
 }
 
 /**
- * Local calendar date (YYYY-MM-DD) for "today". Computed on each call — not
- * cached — so leaving the app open across midnight, or a user in a non-UTC
- * timezone, still gets the right "今天/逾期" classification. `due_date` is a
- * calendar-local value in the model, so we compare against local parts here.
+ * Local calendar date (YYYY-MM-DD) for "today". `due_date` is a calendar-local
+ * value in the model, so we compare against local parts here. Called once per
+ * IssueCard render (see IssueCard below) — do NOT inline this into isOverdue/
+ * isToday/formatDue, that path spends O(cards × 3) `new Date()` allocations on
+ * every Board re-render.
  */
 function todayIso(): string {
   const d = new Date()
@@ -46,17 +47,17 @@ function todayIso(): string {
   return `${y}-${m}-${day}`
 }
 
-function isOverdue(due: string): boolean {
-  return due < todayIso()
+function isOverdue(due: string, today: string): boolean {
+  return due < today
 }
 
-function isToday(due: string): boolean {
-  return due === todayIso()
+function isToday(due: string, today: string): boolean {
+  return due === today
 }
 
-function formatDue(due: string): string {
-  if (isToday(due)) return '今天'
-  if (isOverdue(due)) return `逾期 ${due.slice(5)}`
+function formatDue(due: string, today: string): string {
+  if (isToday(due, today)) return '今天'
+  if (isOverdue(due, today)) return `逾期 ${due.slice(5)}`
   return due.slice(5)
 }
 
@@ -69,8 +70,9 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
   const labels = issue.labels ?? []
   const shownLabels = labels.slice(0, 3)
   const remaining = labels.length - shownLabels.length
-  const overdue = issue.due_date ? isOverdue(issue.due_date) : false
-  const today = issue.due_date ? isToday(issue.due_date) : false
+  const today = todayIso()
+  const overdue = issue.due_date ? isOverdue(issue.due_date, today) : false
+  const isDueToday = issue.due_date ? isToday(issue.due_date, today) : false
   const navigate = useNavigate()
 
   const openDetail = () => {
@@ -129,8 +131,8 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             PRIORITY_CHIP_CLASS[issue.priority],
           )}
-          aria-label={PRIORITY_LABEL[issue.priority]}
-          title={PRIORITY_LABEL[issue.priority]}
+          aria-label={PRIORITY_ARIA_LABEL[issue.priority]}
+          title={PRIORITY_ARIA_LABEL[issue.priority]}
         >
           {issue.priority.toUpperCase()}
         </button>
@@ -172,13 +174,13 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
             variant="outline"
             className={cn(
               'h-5 gap-1 px-1.5 text-[10px] tabular-nums font-normal',
-              overdue && 'border-red-500/60 text-red-600 dark:text-red-400',
-              today && 'border-orange-500/60 text-orange-600 dark:text-orange-400',
-              !overdue && !today && 'text-muted-foreground',
+              overdue && 'border-destructive/60 text-destructive',
+              isDueToday && 'border-[hsl(var(--feedback-warning)/0.6)] text-[hsl(var(--feedback-warning))]',
+              !overdue && !isDueToday && 'text-muted-foreground',
             )}
           >
             <Calendar className="h-3 w-3" />
-            {formatDue(issue.due_date)}
+            {formatDue(issue.due_date, today)}
           </Badge>
         ) : null}
       </div>
