@@ -21,6 +21,6 @@
       "@api/*": ["./*"]
     }
   },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "../src", "../mocks", "../tests", "../.storybook"]
+  "include": ["**/*.ts", "../tests/unit/**/*.ts"],
+  "exclude": ["node_modules", "../src", "../mocks", "../tests/e2e", "../tests/integration", "../tests/smoke", "../tests/helpers", "../.storybook"]
 }

@@ -28,5 +28,5 @@
     }
   },
   "include": ["src", "mocks", "tests", ".storybook"],
-  "exclude": ["node_modules", "api", "dist", ".loop", "storybook-static"]
+  "exclude": ["node_modules", "api", "dist", ".loop", "storybook-static", "tests/unit"]
 }
