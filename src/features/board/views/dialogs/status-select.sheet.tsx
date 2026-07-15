@@ -22,7 +22,11 @@ interface StatusSelectSheetProps {
   issue?: Issue
 }
 
-export function StatusSelectSheet({ open, onOpenChange, issue }: StatusSelectSheetProps) {
+export function StatusSelectSheet({
+  open,
+  onOpenChange,
+  issue,
+}: StatusSelectSheetProps) {
   const mutation = useUpdateIssueStatusMutation()
   const [announcement, setAnnouncement] = useState<string>('')
 
@@ -70,7 +74,10 @@ export function StatusSelectSheet({ open, onOpenChange, issue }: StatusSelectShe
                     isCurrent && 'border-primary bg-primary/5',
                   )}
                 >
-                  <Icon className={cn('h-5 w-5', STATUS_ICON_CLASS[status])} aria-hidden />
+                  <Icon
+                    className={cn('h-5 w-5', STATUS_ICON_CLASS[status])}
+                    aria-hidden
+                  />
                   <span>{BOARD_COLUMN_LABELS[status]}</span>
                 </button>
               )

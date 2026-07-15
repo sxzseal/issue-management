@@ -47,7 +47,7 @@ export function TopBar({ onLogout, className }: TopBarProps) {
       role="banner"
       className={cn(
         'flex h-14 flex-none items-center gap-3 border-b border-border bg-background px-4',
-        className
+        className,
       )}
     >
       <img src="/logo.svg" alt="Issue 管理平台" className="h-8 w-8" />
@@ -78,7 +78,10 @@ export function TopBar({ onLogout, className }: TopBarProps) {
         </DropdownMenu>
       </div>
 
-      <LabelManageDialog open={labelManageOpen} onOpenChange={setLabelManageOpen} />
+      <LabelManageDialog
+        open={labelManageOpen}
+        onOpenChange={setLabelManageOpen}
+      />
     </header>
   )
 }

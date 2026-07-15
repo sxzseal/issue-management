@@ -41,7 +41,7 @@ function Example({ title, code }: ExampleProps) {
       <pre
         className={cn(
           'overflow-x-auto rounded-md border border-input bg-muted px-3 py-2',
-          'font-mono text-[11px] leading-relaxed text-muted-foreground'
+          'font-mono text-[11px] leading-relaxed text-muted-foreground',
         )}
       >
         <code>{code}</code>
@@ -97,7 +97,8 @@ export function ExamplesCard() {
       <CardHeader>
         <CardTitle className="text-base">调用示例</CardTitle>
         <CardDescription>
-          把 <code className="font-mono text-xs">imt_live_YOUR_TOKEN</code> 替换为你生成的 Token；域名替换为你部署的 Worker 地址
+          把 <code className="font-mono text-xs">imt_live_YOUR_TOKEN</code>{' '}
+          替换为你生成的 Token；域名替换为你部署的 Worker 地址
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

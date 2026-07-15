@@ -26,7 +26,10 @@ export const boardQueries = {
     queryOptions({
       queryKey: ['board', 'overview', params] as const,
       queryFn: async (): Promise<BoardData> => {
-        const query: Record<string, string | number> = { page: 1, page_size: 100 }
+        const query: Record<string, string | number> = {
+          page: 1,
+          page_size: 100,
+        }
         if (params.project_id) query.project_id = params.project_id
         const res = await request<IssueListResponse>('/api/issues', { query })
         const columns: BoardColumn[] = BOARD_COLUMNS.map((status) => {

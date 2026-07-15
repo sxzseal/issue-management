@@ -32,7 +32,9 @@ export function useUpdateIssueMutation() {
           const cached = qc.getQueryData<Label[]>(['labels', 'list']) ?? []
           const byId = new Map(cached.map((l) => [l.id, l]))
           nextLabels = label_ids
-            .map((lid) => byId.get(lid) ?? prev.labels.find((l) => l.id === lid))
+            .map(
+              (lid) => byId.get(lid) ?? prev.labels.find((l) => l.id === lid),
+            )
             .filter((l): l is Label => l !== undefined)
         }
         qc.setQueryData<IssueDetail>(['issue-detail', id], {
@@ -105,7 +107,9 @@ export function useCreateCommentMutation() {
         body: payload.body,
       }),
     onMutate: async ({ issueId, body }) => {
-      await qc.cancelQueries({ queryKey: ['issue-detail', issueId, 'comments'] })
+      await qc.cancelQueries({
+        queryKey: ['issue-detail', issueId, 'comments'],
+      })
       const tempId = `tmp_${Math.random().toString(36).slice(2, 10)}`
       const now = new Date().toISOString()
       const optimistic: Comment = {
@@ -145,7 +149,9 @@ export function useCreateCommentMutation() {
       toast.error('评论发布失败，请重试')
     },
     onSettled: (_r, _e, { issueId }) => {
-      void qc.invalidateQueries({ queryKey: ['issue-detail', issueId, 'comments'] })
+      void qc.invalidateQueries({
+        queryKey: ['issue-detail', issueId, 'comments'],
+      })
       // updated_at bumps on the parent issue
       void qc.invalidateQueries({ queryKey: ['issue-detail', issueId] })
     },
@@ -159,7 +165,9 @@ export function useDeleteCommentMutation() {
     mutationFn: (payload: { issueId: string; commentId: string }) =>
       request<null>(`/api/comments/${payload.commentId}`, { method: 'DELETE' }),
     onSuccess: (_r, { issueId }) => {
-      void qc.invalidateQueries({ queryKey: ['issue-detail', issueId, 'comments'] })
+      void qc.invalidateQueries({
+        queryKey: ['issue-detail', issueId, 'comments'],
+      })
       toast.success('评论已删除')
     },
     onError: () => toast.error('删除评论失败'),

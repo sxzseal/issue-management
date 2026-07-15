@@ -24,7 +24,12 @@ interface RevokeTokenModalProps {
   tokenName: string | null
 }
 
-export function RevokeTokenModal({ open, onOpenChange, tokenId, tokenName }: RevokeTokenModalProps) {
+export function RevokeTokenModal({
+  open,
+  onOpenChange,
+  tokenId,
+  tokenName,
+}: RevokeTokenModalProps) {
   const mutation = useRevokeApiTokenMutation()
 
   const handleConfirm = async (): Promise<void> => {

@@ -39,7 +39,7 @@ function makeD1(opts: FakeD1Options = {}) {
         binds.push(...args)
         return stmt
       },
-      first: async <T,>() => {
+      first: async <T>() => {
         calls.push({ sql, binds })
         if (sql.includes('SELECT')) return (opts.selectRow ?? null) as T | null
         return null as T | null
@@ -82,7 +82,9 @@ function makeKv(opts: FakeKvOptions = {}) {
 }
 
 function makeEnv(d1: ReturnType<typeof makeD1>, kv: ReturnType<typeof makeKv>) {
-  return { DB: d1.DB, KV: kv.KV } as unknown as Parameters<typeof verifyApiToken>[0]
+  return { DB: d1.DB, KV: kv.KV } as unknown as Parameters<
+    typeof verifyApiToken
+  >[0]
 }
 
 function fakeRow(overrides: Partial<ApiTokenRow> = {}): ApiTokenRow {

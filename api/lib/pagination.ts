@@ -26,7 +26,9 @@ export interface Pagination {
  * on the route already validates strict types; this helper is for constructing
  * SQL OFFSET/LIMIT once validation passed).
  */
-export function parsePagination(input: PaginationInput | null | undefined): Pagination {
+export function parsePagination(
+  input: PaginationInput | null | undefined,
+): Pagination {
   const page = Math.max(1, Math.floor(Number(input?.page ?? 1)) || 1)
   const raw = Number(input?.page_size ?? DEFAULT_PAGE_SIZE) || DEFAULT_PAGE_SIZE
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(raw)))
@@ -41,6 +43,10 @@ export interface Paginated<T> {
 }
 
 /** Assemble a PaginatedData<T> envelope-ready payload. */
-export function paginate<T>(list: T[], total: number, pagination: Pagination): Paginated<T> {
+export function paginate<T>(
+  list: T[],
+  total: number,
+  pagination: Pagination,
+): Paginated<T> {
   return { list, total, page: pagination.page, page_size: pagination.pageSize }
 }

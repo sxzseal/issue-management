@@ -13,7 +13,8 @@ export interface ListFiltersState {
   status: string[]
   priority: string[]
   q: string
-  sort: 'updated_at' | 'created_at' | 'due_date' | 'title' | 'priority' | 'status'
+  sort:
+    'updated_at' | 'created_at' | 'due_date' | 'title' | 'priority' | 'status'
   order: 'asc' | 'desc'
   page: number
   page_size: number

@@ -32,7 +32,10 @@ interface RateEntry {
   windowSec: number
 }
 
-async function readEntry(kv: KVNamespace, key: string): Promise<RateEntry | null> {
+async function readEntry(
+  kv: KVNamespace,
+  key: string,
+): Promise<RateEntry | null> {
   const raw = await kv.get(key)
   if (raw === null) {
     return null
@@ -72,7 +75,13 @@ export async function rateLimit(
     await kv.put(key, JSON.stringify(entry), {
       expirationTtl: Math.max(KV_MIN_TTL_SECONDS, windowSec),
     })
-    return { ok: true, count: 1, limit, remaining: limit - 1, resetSec: windowSec }
+    return {
+      ok: true,
+      count: 1,
+      limit,
+      remaining: limit - 1,
+      resetSec: windowSec,
+    }
   }
 
   const resetSec = Math.max(0, existing.startedAt + existing.windowSec - now)
@@ -118,12 +127,22 @@ export async function rateLimitLoginFailure(
     await kv.put(key, JSON.stringify(entry), {
       expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
     })
-    return { ok: true, count: 1, limit, remaining: limit - 1, resetSec: freezeSec }
+    return {
+      ok: true,
+      count: 1,
+      limit,
+      remaining: limit - 1,
+      resetSec: freezeSec,
+    }
   }
 
   if (existing.count >= limit) {
     // Freeze is active — refresh the TTL so the window keeps sliding forward.
-    const pinned: RateEntry = { count: limit, startedAt: now, windowSec: freezeSec }
+    const pinned: RateEntry = {
+      count: limit,
+      startedAt: now,
+      windowSec: freezeSec,
+    }
     await kv.put(key, JSON.stringify(pinned), {
       expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
     })
@@ -132,7 +151,11 @@ export async function rateLimitLoginFailure(
 
   const nextCount = existing.count + 1
   if (nextCount >= limit) {
-    const pinned: RateEntry = { count: limit, startedAt: now, windowSec: freezeSec }
+    const pinned: RateEntry = {
+      count: limit,
+      startedAt: now,
+      windowSec: freezeSec,
+    }
     await kv.put(key, JSON.stringify(pinned), {
       expirationTtl: Math.max(KV_MIN_TTL_SECONDS, freezeSec),
     })

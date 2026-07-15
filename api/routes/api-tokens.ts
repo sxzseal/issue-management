@@ -87,7 +87,11 @@ app.post('/', async (c) => {
   )
   if (!rl.ok) {
     const minutes = Math.max(1, Math.ceil(rl.resetSec / 60))
-    return err(c, ErrorCodes.RATE_LIMITED, `Token 铸造过于频繁，请 ${minutes} 分钟后再试`)
+    return err(
+      c,
+      ErrorCodes.RATE_LIMITED,
+      `Token 铸造过于频繁，请 ${minutes} 分钟后再试`,
+    )
   }
 
   let rawBody: unknown
@@ -149,7 +153,11 @@ app.post('/:id/revoke', async (c) => {
     .first<ApiTokenRow>()
 
   if (!row) {
-    return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+    return err(
+      c,
+      ErrorCodes.UNAUTHORIZED,
+      ErrorMessages[ErrorCodes.UNAUTHORIZED],
+    )
   }
 
   if (row.revoked_at !== null) {

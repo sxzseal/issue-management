@@ -245,7 +245,7 @@ function DeleteProjectDialog({
   // dialog stuck retrying the non-cascading path.
   const nonConflictError =
     deleteMutation.isError && !hasIssuesConflict
-      ? errorAsRequest?.message ?? '删除失败，请重试'
+      ? (errorAsRequest?.message ?? '删除失败，请重试')
       : null
 
   const handleOpenChange = (next: boolean) => {
@@ -278,7 +278,9 @@ function DeleteProjectDialog({
             className="h-2 w-2 flex-none rounded-full"
             style={{ backgroundColor: project.color }}
           />
-          <span className="min-w-0 flex-1 truncate text-sm">{project.name}</span>
+          <span className="min-w-0 flex-1 truncate text-sm">
+            {project.name}
+          </span>
         </div>
 
         {nonConflictError ? (

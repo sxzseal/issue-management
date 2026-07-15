@@ -45,9 +45,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Form,
   FormControl,
@@ -125,16 +134,16 @@ function IssueCard({ issue }: IssueCardProps) {
       role="article"
       aria-label={`issue: ${issue.title}`}
       className={cn(
-        'group relative cursor-pointer p-3 space-y-2 min-w-0',
-        'transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus:outline-none',
+        'group relative min-w-0 cursor-pointer space-y-2 p-3',
+        'transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
     >
       {/* header: priority + menu */}
-      <div className="flex items-start justify-between gap-2 min-w-0">
+      <div className="flex min-w-0 items-start justify-between gap-2">
         <Badge
           variant="outline"
           className={cn(
-            'h-5 px-1.5 text-[10px] font-mono font-semibold tabular-nums shrink-0',
+            'h-5 shrink-0 px-1.5 font-mono text-[10px] font-semibold tabular-nums',
             PRIORITY_CHIP_CLASS[issue.priority],
           )}
           aria-label={PRIORITY_LABEL[issue.priority]}
@@ -143,7 +152,7 @@ function IssueCard({ issue }: IssueCardProps) {
           {PRIORITY_SHORT[issue.priority]}
         </Badge>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
           {issue.source === 'api' ? (
             <TooltipProvider>
               <Tooltip>
@@ -156,7 +165,8 @@ function IssueCard({ issue }: IssueCardProps) {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
+                  来源：API Token
+                  {issue.source_name ? ` · ${issue.source_name}` : ''}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -189,14 +199,14 @@ function IssueCard({ issue }: IssueCardProps) {
       </div>
 
       {/* title */}
-      <p className="text-sm font-medium leading-snug line-clamp-2 break-words">
+      <p className="line-clamp-2 break-words text-sm font-medium leading-snug">
         {issue.title}
       </p>
 
       {/* bottom row */}
-      <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         {project ? (
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground min-w-0 max-w-[8rem]">
+          <span className="inline-flex min-w-0 max-w-[8rem] items-center gap-1 text-[11px] text-muted-foreground">
             <span
               aria-hidden
               className="h-2 w-2 shrink-0 rounded-full"
@@ -209,7 +219,7 @@ function IssueCard({ issue }: IssueCardProps) {
         {shownLabels.map((label) => (
           <span
             key={label.id}
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground max-w-[6rem]"
+            className="inline-flex max-w-[6rem] items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
             title={label.name}
           >
             <span
@@ -221,16 +231,19 @@ function IssueCard({ issue }: IssueCardProps) {
           </span>
         ))}
         {remaining > 0 ? (
-          <span className="text-[10px] text-muted-foreground">+{remaining}</span>
+          <span className="text-[10px] text-muted-foreground">
+            +{remaining}
+          </span>
         ) : null}
 
         {issue.due_date ? (
           <Badge
             variant="outline"
             className={cn(
-              'h-5 gap-1 px-1.5 text-[10px] tabular-nums font-normal',
+              'h-5 gap-1 px-1.5 text-[10px] font-normal tabular-nums',
               overdue && 'border-red-500/60 text-red-600 dark:text-red-400',
-              today && 'border-orange-500/60 text-orange-600 dark:text-orange-400',
+              today &&
+                'border-orange-500/60 text-orange-600 dark:text-orange-400',
               !overdue && !today && 'text-muted-foreground',
             )}
           >
@@ -258,10 +271,13 @@ function BoardColumn({ status, issues, onNewInColumn }: ColumnProps) {
   return (
     <section
       aria-label={`${STATUS_LABEL[status]} 列`}
-      className="flex flex-col min-h-0 min-w-0 rounded-lg border border-border bg-card/40"
+      className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-card/40"
     >
-      <header className="flex items-center gap-2 px-3 py-2 border-b border-border">
-        <Icon className={cn('h-4 w-4 shrink-0', STATUS_ICON_CLASS[status])} aria-hidden />
+      <header className="flex items-center gap-2 border-b border-border px-3 py-2">
+        <Icon
+          className={cn('h-4 w-4 shrink-0', STATUS_ICON_CLASS[status])}
+          aria-hidden
+        />
         <span className="text-sm font-medium">{STATUS_LABEL[status]}</span>
         <Badge
           variant="secondary"
@@ -280,12 +296,9 @@ function BoardColumn({ status, issues, onNewInColumn }: ColumnProps) {
         </Button>
       </header>
 
-      <div
-        role="list"
-        className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2"
-      >
+      <div role="list" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
         {issues.length === 0 ? (
-          <div className="grid h-32 place-items-center rounded-md border border-dashed border-border/60 text-xs text-muted-foreground text-center px-4">
+          <div className="grid h-32 place-items-center rounded-md border border-dashed border-border/60 px-4 text-center text-xs text-muted-foreground">
             把卡片拖到这里
           </div>
         ) : (
@@ -305,11 +318,7 @@ function BoardColumn({ status, issues, onNewInColumn }: ColumnProps) {
 // ============================================================
 
 const newIssueSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, '请输入标题')
-    .max(200, '标题最多 200 字符'),
+  title: z.string().trim().min(1, '请输入标题').max(200, '标题最多 200 字符'),
   project_id: z.string().min(1),
   priority: z.enum(['p0', 'p1', 'p2', 'p3']),
   body: z.string().max(100_000).optional(),
@@ -361,7 +370,10 @@ function NewIssueDialog({
           due_date: values.due_date ? values.due_date : null,
         }),
       })
-      const json = (await res.json()) as { status_code: number; message?: string }
+      const json = (await res.json()) as {
+        status_code: number
+        message?: string
+      }
       if (json.status_code === 0) {
         toast.success('已创建 issue')
         form.reset()
@@ -396,7 +408,11 @@ function NewIssueDialog({
                 <FormItem>
                   <FormLabel>标题</FormLabel>
                   <FormControl>
-                    <Input placeholder="例如：重构 issue 详情页 API 类型" autoFocus {...field} />
+                    <Input
+                      placeholder="例如：重构 issue 详情页 API 类型"
+                      autoFocus
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -449,11 +465,13 @@ function NewIssueDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(['p0', 'p1', 'p2', 'p3'] as IssuePriority[]).map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {PRIORITY_LABEL[p]}
-                          </SelectItem>
-                        ))}
+                        {(['p0', 'p1', 'p2', 'p3'] as IssuePriority[]).map(
+                          (p) => (
+                            <SelectItem key={p} value={p}>
+                              {PRIORITY_LABEL[p]}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -507,15 +525,19 @@ function NewIssueDialog({
                             return (
                               <label
                                 key={label.id}
-                                className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent cursor-pointer"
+                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent"
                               >
                                 <Checkbox
                                   checked={checked}
                                   onCheckedChange={(v) => {
                                     const next = v
                                       ? [...selectedLabels, label.id]
-                                      : selectedLabels.filter((id) => id !== label.id)
-                                    form.setValue('label_ids', next, { shouldDirty: true })
+                                      : selectedLabels.filter(
+                                          (id) => id !== label.id,
+                                        )
+                                    form.setValue('label_ids', next, {
+                                      shouldDirty: true,
+                                    })
                                   }}
                                 />
                                 <span
@@ -581,11 +603,16 @@ interface BoardViewProps {
   hideDone?: boolean
 }
 
-function BoardView({ initialDialogOpen = false, hideDone = false }: BoardViewProps) {
+function BoardView({
+  initialDialogOpen = false,
+  hideDone = false,
+}: BoardViewProps) {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(initialDialogOpen)
-  const [dialogStatus, setDialogStatus] = useState<IssueStatus | undefined>(undefined)
+  const [dialogStatus, setDialogStatus] = useState<IssueStatus | undefined>(
+    undefined,
+  )
 
   const fetchIssues = async () => {
     setLoading(true)
@@ -596,7 +623,9 @@ function BoardView({ initialDialogOpen = false, hideDone = false }: BoardViewPro
         data: { list: Issue[] }
       }
       if (json.status_code === 0) {
-        const list = hideDone ? json.data.list.filter((i) => i.status !== 'done') : json.data.list
+        const list = hideDone
+          ? json.data.list.filter((i) => i.status !== 'done')
+          : json.data.list
         setIssues(list)
       }
     } catch {
@@ -638,7 +667,7 @@ function BoardView({ initialDialogOpen = false, hideDone = false }: BoardViewPro
     >
       <div className="flex h-full flex-col overflow-hidden">
         {/* 顶部 toolbar */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-2.5 shrink-0">
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-2.5">
           <Tabs defaultValue="board">
             <TabsList className="h-8">
               {BOARD_VIEW_TABS.map((t) => (
@@ -658,13 +687,13 @@ function BoardView({ initialDialogOpen = false, hideDone = false }: BoardViewPro
             </Badge>
           </div>
 
-          <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+          <div className="ml-auto text-xs tabular-nums text-muted-foreground">
             共 {issues.length} 条
           </div>
         </div>
 
         {/* 4 列看板 */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <div className="grid h-full grid-cols-1 gap-3 p-4 md:grid-cols-2 lg:grid-cols-4">
             {STATUS_ORDER.map((status) => (
               <BoardColumn

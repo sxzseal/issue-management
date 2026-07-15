@@ -23,11 +23,16 @@ export function issueBodyKey(issueId: string): string {
 
 /** Return true if the body should be persisted to R2 (based on UTF-8 byte length). */
 export function shouldOverflow(body: string): boolean {
-  return new TextEncoder().encode(body).byteLength > R2_BODY_INLINE_THRESHOLD_BYTES
+  return (
+    new TextEncoder().encode(body).byteLength > R2_BODY_INLINE_THRESHOLD_BYTES
+  )
 }
 
 /** Read full body content from R2. Returns null if the object does not exist. */
-export async function readBodyFromR2(r2: R2Bucket, key: string): Promise<string | null> {
+export async function readBodyFromR2(
+  r2: R2Bucket,
+  key: string,
+): Promise<string | null> {
   const obj = await r2.get(key)
   if (obj === null) {
     return null
@@ -36,7 +41,11 @@ export async function readBodyFromR2(r2: R2Bucket, key: string): Promise<string 
 }
 
 /** Overwrite (or create) an R2 body object. Returns the key written. */
-export async function writeBodyToR2(r2: R2Bucket, key: string, body: string): Promise<string> {
+export async function writeBodyToR2(
+  r2: R2Bucket,
+  key: string,
+  body: string,
+): Promise<string> {
   await r2.put(key, body, {
     httpMetadata: { contentType: 'text/markdown' },
   })
@@ -44,7 +53,10 @@ export async function writeBodyToR2(r2: R2Bucket, key: string, body: string): Pr
 }
 
 /** Best-effort delete; ignores 404 / errors — R2 delete is idempotent anyway. */
-export async function deleteBodyFromR2(r2: R2Bucket, key: string): Promise<void> {
+export async function deleteBodyFromR2(
+  r2: R2Bucket,
+  key: string,
+): Promise<void> {
   try {
     await r2.delete(key)
   } catch {

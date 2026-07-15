@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  type QueryKey,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { request } from '@/lib/request'
 import type { Issue, IssueStatus } from '@/lib/api-types'
@@ -28,7 +32,12 @@ interface UpdateStatusContext {
  */
 export function useUpdateIssueStatusMutation() {
   const qc = useQueryClient()
-  return useMutation<UpdateStatusResponse, Error, UpdateStatusPayload, UpdateStatusContext>({
+  return useMutation<
+    UpdateStatusResponse,
+    Error,
+    UpdateStatusPayload,
+    UpdateStatusContext
+  >({
     mutationFn: ({ id, status }) =>
       request<UpdateStatusResponse>(`/api/issues/${id}/status`, {
         method: 'PATCH',
@@ -89,7 +98,8 @@ export function useUpdateIssueStatusMutation() {
 export function useCreateIssueMutation() {
   const qc = useQueryClient()
   return useMutation<Issue, Error, CreateIssueBody>({
-    mutationFn: (body) => request<Issue>('/api/issues', { method: 'POST', body }),
+    mutationFn: (body) =>
+      request<Issue>('/api/issues', { method: 'POST', body }),
     onSuccess: (issue) => {
       const boards = qc.getQueriesData<BoardData>({ queryKey: ['board'] })
       boards.forEach(([key, prev]) => {

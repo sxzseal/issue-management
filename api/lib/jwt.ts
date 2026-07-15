@@ -19,7 +19,8 @@ export interface JwtClaims {
   jti: string
 }
 
-export type JwtErrorReason = 'malformed' | 'signature' | 'expired' | 'unsupported'
+export type JwtErrorReason =
+  'malformed' | 'signature' | 'expired' | 'unsupported'
 
 export class JwtError extends Error {
   constructor(public readonly reason: JwtErrorReason) {
@@ -32,12 +33,19 @@ const HEADER_JSON = '{"alg":"HS256","typ":"JWT"}'
 const HEADER_B64 = base64urlEncode(new TextEncoder().encode(HEADER_JSON))
 
 /** Sign an HS256 JWT. Returns compact serialization `h.p.s`. */
-export async function signJwt(secret: string, claims: JwtClaims): Promise<string> {
+export async function signJwt(
+  secret: string,
+  claims: JwtClaims,
+): Promise<string> {
   const payloadJson = JSON.stringify(claims)
   const payloadB64 = base64urlEncode(new TextEncoder().encode(payloadJson))
   const signingInput = `${HEADER_B64}.${payloadB64}`
   const key = await importHmacKey(secret)
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput))
+  const sig = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(signingInput),
+  )
   const sigB64 = base64urlEncode(new Uint8Array(sig))
   return `${signingInput}.${sigB64}`
 }
@@ -47,7 +55,10 @@ export async function signJwt(secret: string, claims: JwtClaims): Promise<string
  * failure. Does not check `nbf`/`iat` — signed tokens with future `iat` are
  * still accepted (only `exp` matters for expiry).
  */
-export async function verifyJwt(secret: string, token: string): Promise<JwtClaims> {
+export async function verifyJwt(
+  secret: string,
+  token: string,
+): Promise<JwtClaims> {
   const parts = token.split('.')
   if (parts.length !== 3) {
     throw new JwtError('malformed')
@@ -69,7 +80,11 @@ export async function verifyJwt(secret: string, token: string): Promise<JwtClaim
 
   const key = await importHmacKey(secret)
   const expected = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${headerB64}.${payloadB64}`)),
+    await crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+    ),
   )
   let provided: Uint8Array
   try {
@@ -148,7 +163,11 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 function isJwtHeader(v: unknown): v is { alg: string; typ?: string } {
-  return typeof v === 'object' && v !== null && typeof (v as { alg?: unknown }).alg === 'string'
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    typeof (v as { alg?: unknown }).alg === 'string'
+  )
 }
 
 function isJwtClaims(v: unknown): v is JwtClaims {

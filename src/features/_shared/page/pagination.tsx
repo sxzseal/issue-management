@@ -1,7 +1,12 @@
 /**
  * 分页控件 — 显示总数、每页大小切换与页码导航
  */
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -44,7 +49,7 @@ export function Pagination({
     <div
       className={cn(
         'flex flex-none items-center justify-between gap-2 border-t border-border bg-background px-6 py-3 text-sm text-foreground',
-        className
+        className,
       )}
     >
       <div className="text-muted-foreground">共 {total} 条</div>

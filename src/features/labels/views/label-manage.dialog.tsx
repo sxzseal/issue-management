@@ -48,7 +48,10 @@ interface LabelManageDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function LabelManageDialog({ open, onOpenChange }: LabelManageDialogProps) {
+export function LabelManageDialog({
+  open,
+  onOpenChange,
+}: LabelManageDialogProps) {
   const labels = useQuery(labelsQueryOptions)
 
   return (
@@ -207,7 +210,11 @@ interface DeleteLabelDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
-function DeleteLabelDialog({ label, open, onOpenChange }: DeleteLabelDialogProps) {
+function DeleteLabelDialog({
+  label,
+  open,
+  onOpenChange,
+}: DeleteLabelDialogProps) {
   const deleteMutation = useDeleteLabelMutation()
 
   const runDelete = () => {

@@ -20,7 +20,8 @@ export function toIsoUtc(value: string | number | Date): string {
 /** Validate an ISO 8601 UTC string ('YYYY-MM-DDTHH:MM:SS[.sss]Z'). */
 export function isIsoUtc(value: unknown): value is string {
   if (typeof value !== 'string') return false
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/.test(value)) return false
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/.test(value))
+    return false
   const d = new Date(value)
   return !Number.isNaN(d.getTime())
 }

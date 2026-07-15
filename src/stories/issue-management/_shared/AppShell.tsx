@@ -43,11 +43,21 @@ interface AppShellProps {
   breadcrumb?: string
 }
 
-const NAV_ITEMS: Array<{ key: NavKey; label: string; icon: typeof LayoutGrid; href: string }> = [
+const NAV_ITEMS: Array<{
+  key: NavKey
+  label: string
+  icon: typeof LayoutGrid
+  href: string
+}> = [
   { key: 'board', label: '看板', icon: LayoutGrid, href: '/board' },
   { key: 'list', label: '列表', icon: List, href: '/list' },
   { key: 'stats', label: '统计', icon: BarChart3, href: '/stats' },
-  { key: 'api-tokens', label: 'API Token', icon: KeyRound, href: '/settings/api-tokens' },
+  {
+    key: 'api-tokens',
+    label: 'API Token',
+    icon: KeyRound,
+    href: '/settings/api-tokens',
+  },
 ]
 
 function TopBar({
@@ -62,26 +72,28 @@ function TopBar({
       role="banner"
       className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4"
     >
-      <div className="flex items-center gap-2 min-w-0">
-        <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-semibold">
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-primary font-semibold text-primary-foreground">
           I
         </div>
         <span className="font-semibold tracking-tight">Issue</span>
         {breadcrumb ? (
           <>
             <span className="text-muted-foreground">/</span>
-            <span className="truncate text-sm text-muted-foreground">{breadcrumb}</span>
+            <span className="truncate text-sm text-muted-foreground">
+              {breadcrumb}
+            </span>
           </>
         ) : null}
       </div>
 
-      <div className="ml-auto flex items-center gap-2 flex-1 max-w-md min-w-0">
-        <div className="relative flex-1 min-w-0">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="ml-auto flex min-w-0 max-w-md flex-1 items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="搜索 issue、项目、标签…"
-            className="pl-8 h-9 bg-background"
+            className="h-9 bg-background pl-8"
             aria-label="全局搜索"
           />
         </div>
@@ -90,23 +102,33 @@ function TopBar({
       <div className="flex items-center gap-1">
         <Button
           size="sm"
-          className="gap-1.5 h-9"
+          className="h-9 gap-1.5"
           onClick={onNewIssue}
           aria-label="新建 issue（快捷键 n）"
         >
           <Plus className="h-4 w-4" />
           新建
-          <kbd className="ml-1 hidden md:inline-flex items-center rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1 text-[10px] font-mono">
+          <kbd className="ml-1 hidden items-center rounded border border-primary-foreground/30 bg-primary-foreground/10 px-1 font-mono text-[10px] md:inline-flex">
             N
           </kbd>
         </Button>
-        <Button variant="ghost" size="icon" aria-label="通知" className="h-9 w-9">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="通知"
+          className="h-9 w-9"
+        >
           <Bell className="h-4 w-4" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1.5 h-9" aria-label="用户菜单">
-              <div className="grid h-6 w-6 place-items-center rounded-full bg-accent text-accent-foreground text-xs font-medium">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1.5"
+              aria-label="用户菜单"
+            >
+              <div className="grid h-6 w-6 place-items-center rounded-full bg-accent text-xs font-medium text-accent-foreground">
                 我
               </div>
               <ChevronDown className="h-3.5 w-3.5" />
@@ -145,9 +167,9 @@ function Sidebar({
     <aside
       role="navigation"
       aria-label="主导航"
-      className="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-card/50"
+      className="hidden w-60 shrink-0 flex-col border-r border-border bg-card/50 md:flex"
     >
-      <nav className="p-3 flex flex-col gap-0.5">
+      <nav className="flex flex-col gap-0.5 p-3">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           const isActive = activeNav === item.key
@@ -160,7 +182,7 @@ function Sidebar({
                 'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors',
                 'hover:bg-accent hover:text-accent-foreground',
                 isActive
-                  ? 'bg-accent text-accent-foreground font-medium'
+                  ? 'bg-accent font-medium text-accent-foreground'
                   : 'text-muted-foreground',
               )}
             >
@@ -173,7 +195,7 @@ function Sidebar({
 
       <Separator className="mx-3 w-auto" />
 
-      <div className="px-3 pt-3 flex items-center justify-between">
+      <div className="flex items-center justify-between px-3 pt-3">
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           项目
         </span>
@@ -187,7 +209,7 @@ function Sidebar({
         </Button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 pt-1.5 flex flex-col gap-0.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3 pt-1.5">
         {MOCK_PROJECTS.map((project) => {
           const isActive = activeProjectId === project.id
           const isInbox = project.id === 'proj_inbox'
@@ -197,10 +219,10 @@ function Sidebar({
               type="button"
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors group',
+                'group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors',
                 'hover:bg-accent hover:text-accent-foreground',
                 isActive
-                  ? 'bg-accent text-accent-foreground font-medium'
+                  ? 'bg-accent font-medium text-accent-foreground'
                   : 'text-foreground/80',
               )}
             >
@@ -213,7 +235,7 @@ function Sidebar({
                   style={{ backgroundColor: project.color }}
                 />
               )}
-              <span className="truncate flex-1 text-left">{project.name}</span>
+              <span className="flex-1 truncate text-left">{project.name}</span>
               {project.issue_count > 0 ? (
                 <Badge
                   variant="secondary"
@@ -256,9 +278,9 @@ export function AppShell({
       )}
     >
       <TopBar onNewIssue={onNewIssue} breadcrumb={breadcrumb} />
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         <Sidebar activeNav={activeNav} activeProjectId={activeProjectId} />
-        <main role="main" className="flex-1 min-h-0 min-w-0 overflow-hidden">
+        <main role="main" className="min-h-0 min-w-0 flex-1 overflow-hidden">
           {children}
         </main>
       </div>

@@ -65,7 +65,9 @@ interface TokensListCardProps {
 }
 
 export function TokensListCard({ tokens }: TokensListCardProps) {
-  const [target, setTarget] = useState<{ id: string; name: string } | null>(null)
+  const [target, setTarget] = useState<{ id: string; name: string } | null>(
+    null,
+  )
   const isEmpty = tokens.length === 0
 
   return (
@@ -77,7 +79,9 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
         </CardHeader>
         <CardContent>
           {isEmpty ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">还没有 Token —— 在上方创建一个</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              还没有 Token —— 在上方创建一个
+            </p>
           ) : (
             <>
               {/* Desktop */}
@@ -90,18 +94,27 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                       <TableHead className="w-[160px]">创建</TableHead>
                       <TableHead className="w-[160px]">上次使用</TableHead>
                       <TableHead className="w-[92px]">状态</TableHead>
-                      <TableHead className="w-[100px] text-right">操作</TableHead>
+                      <TableHead className="w-[100px] text-right">
+                        操作
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {tokens.map((t) => {
                       const revoked = t.revoked_at !== null
                       return (
-                        <TableRow key={t.id} className={cn(revoked && 'opacity-60')}>
-                          <TableCell className="max-w-[240px] truncate font-medium">{t.name}</TableCell>
+                        <TableRow
+                          key={t.id}
+                          className={cn(revoked && 'opacity-60')}
+                        >
+                          <TableCell className="max-w-[240px] truncate font-medium">
+                            {t.name}
+                          </TableCell>
                           <TableCell className="font-mono text-xs text-muted-foreground">
                             {t.prefix}
-                            <span className="text-muted-foreground/60">•••</span>
+                            <span className="text-muted-foreground/60">
+                              •••
+                            </span>
                           </TableCell>
                           <TableCell className="whitespace-nowrap font-mono text-xs tabular-nums text-muted-foreground">
                             {formatDateTime(t.created_at)}
@@ -114,14 +127,18 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                           </TableCell>
                           <TableCell className="text-right">
                             {revoked ? (
-                              <span className="text-xs text-muted-foreground">{NONE}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {NONE}
+                              </span>
                             ) : (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() => setTarget({ id: t.id, name: t.name })}
+                                onClick={() =>
+                                  setTarget({ id: t.id, name: t.name })
+                                }
                               >
                                 <Ban className="h-3.5 w-3.5" />
                                 撤销
@@ -144,11 +161,13 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                       key={t.id}
                       className={cn(
                         'space-y-1.5 rounded-md border border-border bg-card p-3',
-                        revoked && 'opacity-60'
+                        revoked && 'opacity-60',
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="min-w-0 truncate text-sm font-medium">{t.name}</span>
+                        <span className="min-w-0 truncate text-sm font-medium">
+                          {t.name}
+                        </span>
                         <StatusBadge revoked={revoked} />
                       </div>
                       <div className="font-mono text-xs text-muted-foreground">
@@ -166,7 +185,9 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                             variant="outline"
                             size="sm"
                             className="w-full gap-1.5 text-destructive"
-                            onClick={() => setTarget({ id: t.id, name: t.name })}
+                            onClick={() =>
+                              setTarget({ id: t.id, name: t.name })
+                            }
                           >
                             <Ban className="h-3.5 w-3.5" />
                             撤销

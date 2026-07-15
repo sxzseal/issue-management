@@ -5,7 +5,13 @@
  *
  * Icon tone uses semantic tokens from `globals.css`.
  */
-import { Archive, CheckCircle2, Circle, PlayCircle, type LucideIcon } from 'lucide-react'
+import {
+  Archive,
+  CheckCircle2,
+  Circle,
+  PlayCircle,
+  type LucideIcon,
+} from 'lucide-react'
 import type { IssueStatus } from '@/lib/api-types'
 
 export const STATUS_ICON: Record<IssueStatus, LucideIcon> = {

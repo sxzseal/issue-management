@@ -20,7 +20,11 @@ interface InlineEditableTitleProps {
   disabled?: boolean
 }
 
-export function InlineEditableTitle({ value, onSave, disabled }: InlineEditableTitleProps) {
+export function InlineEditableTitle({
+  value,
+  onSave,
+  disabled,
+}: InlineEditableTitleProps) {
   const [editing, setEditing] = useState<boolean>(false)
   const [draft, setDraft] = useState<string>(value)
   const [saving, setSaving] = useState<boolean>(false)

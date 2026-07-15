@@ -102,7 +102,10 @@ async function fetchLabelsForIssues(
 }
 
 /** Load a single issue row by id; null if not found. Full row includes `body`. */
-async function loadIssueRow(db: D1Database, id: string): Promise<IssueRow | null> {
+async function loadIssueRow(
+  db: D1Database,
+  id: string,
+): Promise<IssueRow | null> {
   const row = await db
     .prepare(`SELECT * FROM ${TABLES.issues} WHERE id = ?`)
     .bind(id)
@@ -116,7 +119,10 @@ async function loadIssueRow(db: D1Database, id: string): Promise<IssueRow | null
  * to 4KiB (R2_BODY_INLINE_THRESHOLD_BYTES); this saves that per-request read
  * bandwidth + JSON serialization on hot mutation paths.
  */
-async function loadIssueRowMeta(db: D1Database, id: string): Promise<IssueRow | null> {
+async function loadIssueRowMeta(
+  db: D1Database,
+  id: string,
+): Promise<IssueRow | null> {
   const row = await db
     .prepare(
       `SELECT id, project_id, title, NULL AS body, body_r2_key, status, priority,
@@ -167,7 +173,11 @@ app.get('/', async (c) => {
 
   const parsed = listIssuesQuerySchema.safeParse(raw)
   if (!parsed.success) {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const q = parsed.data
 
@@ -252,7 +262,9 @@ app.get('/', async (c) => {
     c.env.DB,
     rows.map((r) => r.id),
   )
-  const list: Issue[] = rows.map((r) => rowToIssue(r, labelsByIssue.get(r.id) ?? []))
+  const list: Issue[] = rows.map((r) =>
+    rowToIssue(r, labelsByIssue.get(r.id) ?? []),
+  )
 
   return ok(c, { list, total, page: q.page, page_size: q.page_size })
 })
@@ -265,11 +277,19 @@ app.post('/', async (c) => {
   try {
     json = await c.req.json()
   } catch {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const parsed = createIssueBodySchema.safeParse(json)
   if (!parsed.success) {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const data = parsed.data
 
@@ -305,15 +325,20 @@ app.post('/', async (c) => {
   // Provenance: browser session → 'manual'; API token → 'api'. The badge on
   // the board / list / detail views branches on this. authKind is set by
   // authGuard; the fallback keeps this handler defensive if that changes.
-  const source: 'manual' | 'api' = c.get('authKind') === 'api-token' ? 'api' : 'manual'
-  const sourceName = source === 'api' ? c.get('authTokenId') ?? null : null
+  const source: 'manual' | 'api' =
+    c.get('authKind') === 'api-token' ? 'api' : 'manual'
+  const sourceName = source === 'api' ? (c.get('authTokenId') ?? null) : null
 
   // body overflow decision
   let insertBody: string | null = null
   let insertBodyR2Key: string | null = null
   if (typeof data.body === 'string') {
     if (shouldOverflow(data.body)) {
-      insertBodyR2Key = await writeBodyToR2(c.env.R2, issueBodyKey(id), data.body)
+      insertBodyR2Key = await writeBodyToR2(
+        c.env.R2,
+        issueBodyKey(id),
+        data.body,
+      )
       insertBody = null
     } else {
       insertBody = data.body
@@ -344,11 +369,9 @@ app.post('/', async (c) => {
 
   if (data.label_ids.length > 0) {
     const statements = data.label_ids.map((labelId) =>
-      c.env.DB
-        .prepare(
-          `INSERT INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES (?, ?)`,
-        )
-        .bind(id, labelId),
+      c.env.DB.prepare(
+        `INSERT INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES (?, ?)`,
+      ).bind(id, labelId),
     )
     await c.env.DB.batch(statements)
   }
@@ -411,11 +434,19 @@ app.patch('/:id', async (c) => {
   try {
     json = await c.req.json()
   } catch {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const parsed = updateIssueBodySchema.safeParse(json)
   if (!parsed.success) {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const patch = parsed.data
 
@@ -425,7 +456,10 @@ app.patch('/:id', async (c) => {
   }
 
   // Validate project_id change (if present)
-  if (patch.project_id !== undefined && patch.project_id !== existing.project_id) {
+  if (
+    patch.project_id !== undefined &&
+    patch.project_id !== existing.project_id
+  ) {
     const projectRow = await c.env.DB.prepare(
       `SELECT id FROM ${TABLES.projects} WHERE id = ?`,
     )
@@ -531,11 +565,9 @@ app.patch('/:id', async (c) => {
       .run()
     if (patch.label_ids.length > 0) {
       const statements = patch.label_ids.map((labelId) =>
-        c.env.DB
-          .prepare(
-            `INSERT INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES (?, ?)`,
-          )
-          .bind(id, labelId),
+        c.env.DB.prepare(
+          `INSERT INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES (?, ?)`,
+        ).bind(id, labelId),
       )
       await c.env.DB.batch(statements)
     }
@@ -557,7 +589,9 @@ app.patch('/:id', async (c) => {
         }
       : {}),
     ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
-    ...(patch.due_date !== undefined ? { due_date: patch.due_date ?? null } : {}),
+    ...(patch.due_date !== undefined
+      ? { due_date: patch.due_date ?? null }
+      : {}),
     ...(patch.body !== undefined
       ? patch.body === null
         ? { body: null, body_r2_key: null }
@@ -581,11 +615,19 @@ app.patch('/:id/status', async (c) => {
   try {
     json = await c.req.json()
   } catch {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const parsed = updateIssueStatusBodySchema.safeParse(json)
   if (!parsed.success) {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const { status } = parsed.data
 
@@ -623,7 +665,9 @@ app.delete('/:id', async (c) => {
   if (existing.body_r2_key) {
     await deleteBodyFromR2(c.env.R2, existing.body_r2_key)
   }
-  await c.env.DB.prepare(`DELETE FROM ${TABLES.issues} WHERE id = ?`).bind(id).run()
+  await c.env.DB.prepare(`DELETE FROM ${TABLES.issues} WHERE id = ?`)
+    .bind(id)
+    .run()
 
   return noContent(c)
 })

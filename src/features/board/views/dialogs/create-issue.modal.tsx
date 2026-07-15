@@ -56,7 +56,12 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import type { z } from 'zod'
 import { request } from '@/lib/request'
-import type { Label as LabelType, Project, IssuePriority, IssueStatus } from '@/lib/api-types'
+import type {
+  Label as LabelType,
+  Project,
+  IssuePriority,
+  IssueStatus,
+} from '@/lib/api-types'
 import {
   createIssueBodySchema,
   type CreateIssueBody,
@@ -105,7 +110,8 @@ function useMatchesMobile(query = '(max-width: 639px)'): boolean {
       mql.addEventListener('change', notify)
       return () => mql.removeEventListener('change', notify)
     },
-    () => (typeof window === 'undefined' ? false : window.matchMedia(query).matches),
+    () =>
+      typeof window === 'undefined' ? false : window.matchMedia(query).matches,
     () => false,
   )
 }
@@ -297,15 +303,19 @@ export function CreateIssueModal({
                         return (
                           <label
                             key={label.id}
-                            className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent cursor-pointer"
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent"
                           >
                             <Checkbox
                               checked={checked}
                               onCheckedChange={(v) => {
                                 const next = v
                                   ? [...selectedLabels, label.id]
-                                  : selectedLabels.filter((id) => id !== label.id)
-                                form.setValue('label_ids', next, { shouldDirty: true })
+                                  : selectedLabels.filter(
+                                      (id) => id !== label.id,
+                                    )
+                                form.setValue('label_ids', next, {
+                                  shouldDirty: true,
+                                })
                               }}
                             />
                             <span

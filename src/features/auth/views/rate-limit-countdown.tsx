@@ -38,7 +38,11 @@ export function RateLimitCountdown({
       aria-live="polite"
       className={cn('text-sm text-destructive', className)}
     >
-      尝试过多，请 <span className="font-mono">{mm}:{ss}</span> 后再试
+      尝试过多，请{' '}
+      <span className="font-mono">
+        {mm}:{ss}
+      </span>{' '}
+      后再试
     </div>
   )
 }

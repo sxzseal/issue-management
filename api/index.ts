@@ -49,7 +49,11 @@ app.notFound((c) => {
 // Fallback for uncaught errors that escape errorHandler (should never happen).
 app.onError((e, c) => {
   console.error('[app.onError]', e)
-  return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+  return err(
+    c,
+    ErrorCodes.INTERNAL_ERROR,
+    ErrorMessages[ErrorCodes.INTERNAL_ERROR],
+  )
 })
 
 export default app

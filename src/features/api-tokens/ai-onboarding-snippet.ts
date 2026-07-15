@@ -10,7 +10,10 @@
  * Kept as plain string concatenation — no template engine, no i18n; the
  * consumer of the snippet is an LLM which does not care about typography.
  */
-export function buildAiOnboardingSnippet(baseUrl: string, token: string): string {
+export function buildAiOnboardingSnippet(
+  baseUrl: string,
+  token: string,
+): string {
   return `# Issue Management API 使用说明
 
 调用一个内部 issue 管理系统的 REST API。所有请求走 HTTPS、返回 JSON 信封。

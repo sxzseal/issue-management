@@ -75,7 +75,12 @@ export const SOURCE_LABEL: Record<IssueSource, string> = {
   api: 'API Token',
 }
 
-export const STATUS_ORDER: IssueStatus[] = ['todo', 'in_progress', 'done', 'archived']
+export const STATUS_ORDER: IssueStatus[] = [
+  'todo',
+  'in_progress',
+  'done',
+  'archived',
+]
 export const PRIORITY_ORDER: IssuePriority[] = ['p0', 'p1', 'p2', 'p3']
 
 export const MOCK_PROJECTS: Project[] = [
@@ -122,12 +127,42 @@ export const MOCK_PROJECTS: Project[] = [
 ]
 
 export const MOCK_LABELS: Label[] = [
-  { id: 'lbl_bug', name: 'bug', color: '#ef4444', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'lbl_feature', name: 'feature', color: '#3b82f6', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'lbl_refactor', name: 'refactor', color: '#8b5cf6', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'lbl_docs', name: 'docs', color: '#10b981', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'lbl_debt', name: 'tech-debt', color: '#f59e0b', created_at: '2026-05-01T00:00:00Z' },
-  { id: 'lbl_someday', name: 'someday', color: '#94a3b8', created_at: '2026-05-01T00:00:00Z' },
+  {
+    id: 'lbl_bug',
+    name: 'bug',
+    color: '#ef4444',
+    created_at: '2026-05-01T00:00:00Z',
+  },
+  {
+    id: 'lbl_feature',
+    name: 'feature',
+    color: '#3b82f6',
+    created_at: '2026-05-01T00:00:00Z',
+  },
+  {
+    id: 'lbl_refactor',
+    name: 'refactor',
+    color: '#8b5cf6',
+    created_at: '2026-05-01T00:00:00Z',
+  },
+  {
+    id: 'lbl_docs',
+    name: 'docs',
+    color: '#10b981',
+    created_at: '2026-05-01T00:00:00Z',
+  },
+  {
+    id: 'lbl_debt',
+    name: 'tech-debt',
+    color: '#f59e0b',
+    created_at: '2026-05-01T00:00:00Z',
+  },
+  {
+    id: 'lbl_someday',
+    name: 'someday',
+    color: '#94a3b8',
+    created_at: '2026-05-01T00:00:00Z',
+  },
 ]
 
 export function projectById(id: string): Project | undefined {

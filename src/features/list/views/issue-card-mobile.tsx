@@ -22,14 +22,17 @@ export function IssueCardMobile({ issue }: IssueCardMobileProps) {
   return (
     <Link
       to={`/issue/${issue.id}`}
-      className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <Card className="flex flex-col gap-2 p-3 hover:bg-muted/40 transition-colors">
-        <div className="text-sm font-medium line-clamp-2">{issue.title}</div>
+      <Card className="flex flex-col gap-2 p-3 transition-colors hover:bg-muted/40">
+        <div className="line-clamp-2 text-sm font-medium">{issue.title}</div>
         <div className="flex flex-wrap items-center gap-1 text-xs">
           <Badge
             variant="outline"
-            className={cn('whitespace-nowrap font-normal', STATUS_CLASS[issue.status])}
+            className={cn(
+              'whitespace-nowrap font-normal',
+              STATUS_CLASS[issue.status],
+            )}
           >
             {STATUS_LABEL[issue.status]}
           </Badge>
@@ -37,7 +40,7 @@ export function IssueCardMobile({ issue }: IssueCardMobileProps) {
             variant="outline"
             className={cn(
               'whitespace-nowrap font-medium tabular-nums',
-              PRIORITY_CLASS[issue.priority]
+              PRIORITY_CLASS[issue.priority],
             )}
           >
             {PRIORITY_LABEL[issue.priority]}

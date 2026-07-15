@@ -23,7 +23,12 @@ import type { ListParams } from '../types'
 import type { ListParamActions } from '../use-list-params'
 import { PRIORITY_LABEL, STATUS_LABEL } from '../status-visuals'
 
-const STATUS_OPTIONS: readonly IssueStatus[] = ['todo', 'in_progress', 'done', 'archived']
+const STATUS_OPTIONS: readonly IssueStatus[] = [
+  'todo',
+  'in_progress',
+  'done',
+  'archived',
+]
 const PRIORITY_OPTIONS: readonly IssuePriority[] = ['p0', 'p1', 'p2', 'p3']
 
 const projectsQuery = queryOptions({
@@ -94,7 +99,9 @@ function useSyncSearchTerm(
 
 function toggleArray<T>(arr: readonly T[] | undefined, value: T): T[] {
   const list = arr ?? []
-  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
+  return list.includes(value)
+    ? list.filter((v) => v !== value)
+    : [...list, value]
 }
 
 interface FilterTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -112,8 +119,9 @@ const FilterTrigger = forwardRef<HTMLButtonElement, FilterTriggerProps>(
       size="sm"
       className={cn(
         'h-8 gap-1.5',
-        hasValue && 'border-primary/60 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary',
-        className
+        hasValue &&
+          'border-primary/60 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary',
+        className,
       )}
       {...props}
     >
@@ -125,7 +133,7 @@ const FilterTrigger = forwardRef<HTMLButtonElement, FilterTriggerProps>(
       )}
       <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden />
     </Button>
-  )
+  ),
 )
 FilterTrigger.displayName = 'FilterTrigger'
 
@@ -164,10 +172,10 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
   const projectLabel = activeProject ? `项目：${activeProject.name}` : '项目'
 
   return (
-    <div className="flex-none flex flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-3">
-      <div className="relative w-full sm:w-64 shrink-0">
+    <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-3">
+      <div className="relative w-full shrink-0 sm:w-64">
         <Search
-          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
         <Input
@@ -175,7 +183,7 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
           value={localQ}
           onChange={(e) => setLocalQ(e.target.value)}
           placeholder="搜索标题…"
-          className="pl-8 h-9"
+          className="h-9 pl-8"
           aria-label="搜索 issue 标题"
         />
       </div>
@@ -198,7 +206,9 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
               className="justify-between"
             >
               <span>全部项目</span>
-              {!activeProject && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+              {!activeProject && (
+                <Check className="h-4 w-4 shrink-0" aria-hidden />
+              )}
             </DropdownMenuItem>
             {projects.map((p) => {
               const selected = params.project_id === p.id
@@ -211,7 +221,7 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
                   }}
                   className="justify-between"
                 >
-                  <span className="flex items-center gap-2 min-w-0">
+                  <span className="flex min-w-0 items-center gap-2">
                     <span
                       aria-hidden
                       className="h-2 w-2 shrink-0 rounded-full"
@@ -219,7 +229,9 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
                     />
                     <span className="truncate">{p.name}</span>
                   </span>
-                  {selected && <Check className="h-4 w-4 shrink-0" aria-hidden />}
+                  {selected && (
+                    <Check className="h-4 w-4 shrink-0" aria-hidden />
+                  )}
                 </DropdownMenuItem>
               )
             })}

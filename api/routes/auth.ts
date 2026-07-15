@@ -48,12 +48,20 @@ app.post('/login', async (c) => {
   try {
     body = await c.req.json()
   } catch {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
 
   const parsed = loginBodySchema.safeParse(body)
   if (!parsed.success) {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const { password } = parsed.data
 
@@ -64,7 +72,12 @@ app.post('/login', async (c) => {
   // the freeze is active AND increments the per-attempt counter. On a
   // successful password we clear the key below, so legitimate logins do not
   // pollute the counter.
-  const rl = await rateLimitLoginFailure(c.env.KV, failKey, LOGIN_FAIL_LIMIT, LOGIN_FREEZE_SEC)
+  const rl = await rateLimitLoginFailure(
+    c.env.KV,
+    failKey,
+    LOGIN_FAIL_LIMIT,
+    LOGIN_FREEZE_SEC,
+  )
   if (!rl.ok) {
     const minutes = Math.max(1, Math.ceil(rl.resetSec / 60))
     return err(c, ErrorCodes.RATE_LIMITED, `尝试过多，请 ${minutes} 分钟后再试`)
@@ -80,7 +93,12 @@ app.post('/login', async (c) => {
   const now = Math.floor(Date.now() / 1000)
   const exp = now + JWT_TTL_SEC
   const jti = randomJti()
-  const token = await signJwt(c.env.JWT_SECRET, { sub: 'owner', iat: now, exp, jti })
+  const token = await signJwt(c.env.JWT_SECRET, {
+    sub: 'owner',
+    iat: now,
+    exp,
+    jti,
+  })
   const expires_at = new Date(exp * 1000).toISOString()
   return ok(c, { token, expires_at })
 })
@@ -92,7 +110,11 @@ app.post('/logout', async (c) => {
     return ok(c, null)
   } catch (e) {
     if (e instanceof AuthError) {
-      return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+      return err(
+        c,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorMessages[ErrorCodes.UNAUTHORIZED],
+      )
     }
     throw e
   }

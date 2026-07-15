@@ -14,7 +14,7 @@ export function Loading({ className, children }: LoadingProps) {
     <div
       className={cn(
         'flex min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground',
-        className
+        className,
       )}
       role="status"
       aria-live="polite"

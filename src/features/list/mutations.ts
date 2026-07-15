@@ -5,7 +5,8 @@ import { request } from '@/lib/request'
 export function useDeleteIssueMutation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => request<null>(`/api/issues/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) =>
+      request<null>(`/api/issues/${id}`, { method: 'DELETE' }),
     onSuccess: (_r, id) => {
       qc.removeQueries({ queryKey: ['issue-detail', id] })
       void qc.invalidateQueries({ queryKey: ['issue-list'] })

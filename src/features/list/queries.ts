@@ -24,7 +24,8 @@ export const listQueries = {
   page: (params: ListParams) =>
     queryOptions({
       queryKey: ['issue-list', params] as const,
-      queryFn: () => request<ListData>('/api/issues', { query: toApiQuery(params) }),
+      queryFn: () =>
+        request<ListData>('/api/issues', { query: toApiQuery(params) }),
       staleTime: 15_000,
     }),
 }

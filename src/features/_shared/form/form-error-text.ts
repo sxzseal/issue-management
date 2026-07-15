@@ -9,7 +9,9 @@ export interface FieldMetaLike {
   errors?: ReadonlyArray<unknown>
 }
 
-export function formErrorText(meta: FieldMetaLike | undefined | null): string | null {
+export function formErrorText(
+  meta: FieldMetaLike | undefined | null,
+): string | null {
   if (!meta?.isTouched) return null
   const first = meta.errors?.[0]
   if (!first) return null

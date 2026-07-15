@@ -53,7 +53,8 @@ app.get('/issues/:id/comments', async (c) => {
   const parsed = listCommentsQuerySchema.safeParse(rawQuery)
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0]
-    const message = firstIssue?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED]
+    const message =
+      firstIssue?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED]
     return err(c, ErrorCodes.VALIDATION_FAILED, message)
   }
   const { page, page_size } = parsed.data
@@ -97,13 +98,18 @@ app.post('/issues/:id/comments', async (c) => {
   try {
     rawBody = await c.req.json()
   } catch {
-    return err(c, ErrorCodes.VALIDATION_FAILED, ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
 
   const parsed = createCommentBodySchema.safeParse(rawBody)
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0]
-    const message = firstIssue?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED]
+    const message =
+      firstIssue?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED]
     return err(c, ErrorCodes.VALIDATION_FAILED, message)
   }
 
@@ -144,7 +150,9 @@ app.delete('/comments/:id', async (c) => {
     return err(c, ErrorCodes.NOT_FOUND, '评论不存在')
   }
 
-  await c.env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(commentId).run()
+  await c.env.DB.prepare('DELETE FROM comments WHERE id = ?')
+    .bind(commentId)
+    .run()
 
   return noContent(c)
 })

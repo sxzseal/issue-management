@@ -32,7 +32,9 @@ export interface GeneratedApiToken {
 export async function hashToken(raw: string): Promise<string> {
   const bytes = new TextEncoder().encode(raw)
   const digest = await crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+  return Array.from(new Uint8Array(digest), (b) =>
+    b.toString(16).padStart(2, '0'),
+  ).join('')
 }
 
 export async function generateApiToken(): Promise<GeneratedApiToken> {
@@ -62,7 +64,10 @@ export function looksLikeApiToken(raw: string): boolean {
  * KV/D1 write failure downgrades to a slightly stale UI on next refresh
  * rather than 500-ing an otherwise valid auth check.
  */
-export async function verifyApiToken(env: Env, raw: string): Promise<ApiTokenRow | null> {
+export async function verifyApiToken(
+  env: Env,
+  raw: string,
+): Promise<ApiTokenRow | null> {
   const hash = await hashToken(raw)
   const row = await env.DB.prepare(
     `SELECT id, name, token_hash, prefix, created_at, last_used_at, revoked_at

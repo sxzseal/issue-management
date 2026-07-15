@@ -40,7 +40,10 @@ function shouldEmit(level: LogLevel, envLevel: LogLevel | undefined): boolean {
   return LEVEL_RANK[level] >= threshold
 }
 
-function resolveIp(header: string | undefined, fallback: string | undefined): string {
+function resolveIp(
+  header: string | undefined,
+  fallback: string | undefined,
+): string {
   if (header && header.length > 0) {
     return header
   }
@@ -70,8 +73,10 @@ export function requestLogger(): MiddlewareHandler<{
 }> {
   return async (c, next) => {
     const t0 = performance.now()
-    const upstreamId = c.req.header('X-Request-Id') ?? c.req.header('x-request-id')
-    const requestId = upstreamId && upstreamId.length > 0 ? upstreamId : crypto.randomUUID()
+    const upstreamId =
+      c.req.header('X-Request-Id') ?? c.req.header('x-request-id')
+    const requestId =
+      upstreamId && upstreamId.length > 0 ? upstreamId : crypto.randomUUID()
     c.set('requestId', requestId)
     c.header('X-Request-Id', requestId)
 
@@ -84,7 +89,10 @@ export function requestLogger(): MiddlewareHandler<{
     }
 
     const durationMs = Math.round(performance.now() - t0)
-    const ip = resolveIp(c.req.header('CF-Connecting-IP'), c.req.header('X-Forwarded-For'))
+    const ip = resolveIp(
+      c.req.header('CF-Connecting-IP'),
+      c.req.header('X-Forwarded-For'),
+    )
     const path = new URL(c.req.url).pathname
 
     // structured request log — allowed console.log

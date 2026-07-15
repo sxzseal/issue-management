@@ -32,7 +32,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   sorting?: SortingState
   onSortingChange?: (
-    updater: SortingState | ((prev: SortingState) => SortingState)
+    updater: SortingState | ((prev: SortingState) => SortingState),
   ) => void
   emptyState?: React.ReactNode
   loading?: boolean
@@ -75,7 +75,7 @@ export function DataTable<TData, TValue>({
     <div
       className={cn(
         'flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border bg-background',
-        className
+        className,
       )}
     >
       <div className="min-h-0 flex-1 overflow-auto">
@@ -105,7 +105,9 @@ export function DataTable<TData, TValue>({
                       aria-sort={canSort ? ariaSort : undefined}
                       style={{
                         width:
-                          header.getSize() !== 150 ? header.getSize() : undefined,
+                          header.getSize() !== 150
+                            ? header.getSize()
+                            : undefined,
                       }}
                     >
                       {header.isPlaceholder ? null : canSort ? (
@@ -114,19 +116,22 @@ export function DataTable<TData, TValue>({
                           onClick={header.column.getToggleSortingHandler()}
                           className={cn(
                             'inline-flex items-center gap-1 rounded text-left font-medium text-muted-foreground transition-colors hover:text-foreground',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           )}
                         >
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
-                          <SortIcon className="h-3.5 w-3.5 opacity-70" aria-hidden />
+                          <SortIcon
+                            className="h-3.5 w-3.5 opacity-70"
+                            aria-hidden
+                          />
                         </button>
                       ) : (
                         flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )
                       )}
                     </TableHead>
@@ -170,21 +175,25 @@ export function DataTable<TData, TValue>({
                     tabIndex={clickable ? 0 : undefined}
                     onClick={handleClick}
                     onKeyDown={handleKeyDown}
-                    className={cn(clickable && 'cursor-pointer hover:bg-muted/50')}
+                    className={cn(
+                      clickable && 'cursor-pointer hover:bg-muted/50',
+                    )}
                   >
                     {row.getVisibleCells().map((cell) => {
                       const meta = cell.column.columnDef.meta as
-                        | SortableColumnMeta
-                        | undefined
+                        SortableColumnMeta | undefined
                       return (
                         <TableCell
                           key={cell.id}
                           className={cn(
                             'min-w-0',
-                            meta?.truncate && 'truncate'
+                            meta?.truncate && 'truncate',
                           )}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       )
                     })}

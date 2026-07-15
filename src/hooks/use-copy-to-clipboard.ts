@@ -27,22 +27,25 @@ export function useCopyToClipboard(): {
     }
   }, [])
 
-  const copy = useCallback(async (text: string, successMessage = '已复制到剪贴板') => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      toast.success(successMessage)
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current)
+  const copy = useCallback(
+    async (text: string, successMessage = '已复制到剪贴板') => {
+      try {
+        await navigator.clipboard.writeText(text)
+        setCopied(true)
+        toast.success(successMessage)
+        if (timeoutRef.current !== null) {
+          window.clearTimeout(timeoutRef.current)
+        }
+        timeoutRef.current = window.setTimeout(() => {
+          setCopied(false)
+          timeoutRef.current = null
+        }, COPY_FEEDBACK_MS)
+      } catch {
+        toast.error('复制失败，请手动选中')
       }
-      timeoutRef.current = window.setTimeout(() => {
-        setCopied(false)
-        timeoutRef.current = null
-      }, COPY_FEEDBACK_MS)
-    } catch {
-      toast.error('复制失败，请手动选中')
-    }
-  }, [])
+    },
+    [],
+  )
 
   return { copied, copy }
 }

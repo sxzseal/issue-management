@@ -48,14 +48,22 @@ export function authGuard(): MiddlewareHandler<{
     const bearer = extractBearer(header)
     if (!bearer) {
       console.warn('auth-guard rejected: missing bearer')
-      return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+      return err(
+        c,
+        ErrorCodes.UNAUTHORIZED,
+        ErrorMessages[ErrorCodes.UNAUTHORIZED],
+      )
     }
 
     if (looksLikeApiToken(bearer)) {
       const row = await verifyApiToken(c.env, bearer)
       if (!row) {
         console.warn('auth-guard rejected: api-token unknown or revoked')
-        return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+        return err(
+          c,
+          ErrorCodes.UNAUTHORIZED,
+          ErrorMessages[ErrorCodes.UNAUTHORIZED],
+        )
       }
       c.set('authKind', 'api-token')
       c.set('authTokenId', row.id)
@@ -72,7 +80,11 @@ export function authGuard(): MiddlewareHandler<{
     } catch (e) {
       if (e instanceof AuthError) {
         console.warn('auth-guard rejected:', e.reason)
-        return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+        return err(
+          c,
+          ErrorCodes.UNAUTHORIZED,
+          ErrorMessages[ErrorCodes.UNAUTHORIZED],
+        )
       }
       throw e
     }

@@ -49,10 +49,15 @@ export function CreateTokenCard() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">生成新 Token</CardTitle>
-          <CardDescription>为一个客户端（例如 "Claude Code 本机"）单独发一枚，方便日后按需撤销</CardDescription>
+          <CardDescription>
+            为一个客户端（例如 "Claude Code 本机"）单独发一枚，方便日后按需撤销
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+          >
             <div className="min-w-0 flex-1 space-y-1.5">
               <Label htmlFor="api-token-name">名称</Label>
               <Input
@@ -64,7 +69,11 @@ export function CreateTokenCard() {
                 disabled={mutation.isPending}
               />
             </div>
-            <Button type="submit" disabled={!canSubmit} className="gap-1.5 sm:w-auto">
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className="gap-1.5 sm:w-auto"
+            >
               {mutation.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (

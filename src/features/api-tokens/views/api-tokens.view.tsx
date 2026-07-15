@@ -15,7 +15,9 @@ import { TokensListCard } from './tokens-list-card'
 import { ExamplesCard } from './examples-card'
 
 export function ApiTokensView() {
-  const { data, isPending, isError, refetch } = useQuery(apiTokensQueries.list())
+  const { data, isPending, isError, refetch } = useQuery(
+    apiTokensQueries.list(),
+  )
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">

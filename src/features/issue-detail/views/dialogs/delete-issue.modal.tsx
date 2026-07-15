@@ -24,7 +24,11 @@ interface DeleteIssueModalProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function DeleteIssueModal({ issueId, open, onOpenChange }: DeleteIssueModalProps) {
+export function DeleteIssueModal({
+  issueId,
+  open,
+  onOpenChange,
+}: DeleteIssueModalProps) {
   const navigate = useNavigate()
   const del = useDeleteIssueMutation()
 

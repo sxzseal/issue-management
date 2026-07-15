@@ -19,13 +19,19 @@ import { IssueCardMobile } from './issue-card-mobile'
 
 export function ListView() {
   const [params, actions] = useListParams()
-  const { data, isPending, isError, refetch } = useQuery(listQueries.page(params))
+  const { data, isPending, isError, refetch } = useQuery(
+    listQueries.page(params),
+  )
   const [creatingOpen, setCreatingOpen] = useState(false)
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
-      <FilterBar params={params} actions={actions} onCreateIssue={() => setCreatingOpen(true)} />
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <FilterBar
+        params={params}
+        actions={actions}
+        onCreateIssue={() => setCreatingOpen(true)}
+      />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {isPending ? (
           <SkeletonList rows={8} className="p-6" />
         ) : isError ? (
@@ -48,7 +54,7 @@ export function ListView() {
               params={params}
               actions={actions}
             />
-            <div className="md:hidden flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 md:hidden">
               {data.list.map((issue) => (
                 <IssueCardMobile key={issue.id} issue={issue} />
               ))}
@@ -62,7 +68,9 @@ export function ListView() {
           page={data.page}
           pageSize={data.page_size}
           onPageChange={actions.setPage}
-          onPageSizeChange={(size) => actions.setPageSize(size as 20 | 50 | 100)}
+          onPageSizeChange={(size) =>
+            actions.setPageSize(size as 20 | 50 | 100)
+          }
         />
       )}
       <CreateIssueModal open={creatingOpen} onOpenChange={setCreatingOpen} />

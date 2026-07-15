@@ -111,16 +111,16 @@ export function LoginView() {
   return (
     <div
       className={cn(
-        'min-h-screen w-full grid place-items-center bg-muted/40 px-4 py-10',
+        'grid min-h-screen w-full place-items-center bg-muted/40 px-4 py-10',
       )}
     >
       <div className="w-full max-w-sm">
         <div className="rounded-lg border border-input bg-card shadow-sm">
-          <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-2">
+          <div className="flex flex-col items-center gap-3 px-6 pb-2 pt-8">
             <div
               className={cn(
                 'flex h-12 w-12 items-center justify-center rounded-lg',
-                'bg-primary text-primary-foreground text-xl font-semibold shadow-sm',
+                'bg-primary text-xl font-semibold text-primary-foreground shadow-sm',
               )}
               aria-hidden
             >
@@ -171,11 +171,7 @@ export function LoginView() {
                   )}
                 />
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={disabled}
-                >
+                <Button type="submit" className="w-full" disabled={disabled}>
                   {mutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

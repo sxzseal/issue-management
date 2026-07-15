@@ -86,5 +86,7 @@ export async function revoke(c: EnvContext, claims: JwtClaims): Promise<void> {
   const now = Math.floor(Date.now() / 1000)
   const remaining = claims.exp - now
   const ttl = Math.max(KV_MIN_TTL_SECONDS, remaining)
-  await c.env.KV.put(JWT_BLACKLIST_PREFIX + claims.jti, '1', { expirationTtl: ttl })
+  await c.env.KV.put(JWT_BLACKLIST_PREFIX + claims.jti, '1', {
+    expirationTtl: ttl,
+  })
 }

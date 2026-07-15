@@ -1,8 +1,6 @@
 import { z } from 'zod'
 
-const hexColor = z
-  .string()
-  .regex(/^#[0-9a-fA-F]{6}$/, 'color 必须是 #RRGGBB')
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'color 必须是 #RRGGBB')
 
 export const createProjectBodySchema = z
   .object({
@@ -12,7 +10,9 @@ export const createProjectBodySchema = z
   })
   .strict()
 
-export const updateProjectBodySchema = createProjectBodySchema.partial().strict()
+export const updateProjectBodySchema = createProjectBodySchema
+  .partial()
+  .strict()
 
 export const deleteProjectQuerySchema = z
   .object({

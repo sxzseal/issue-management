@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-export const issueStatusSchema = z.enum(['todo', 'in_progress', 'done', 'archived'])
+export const issueStatusSchema = z.enum([
+  'todo',
+  'in_progress',
+  'done',
+  'archived',
+])
 export const issuePrioritySchema = z.enum(['p0', 'p1', 'p2', 'p3'])
 
 const dateStringSchema = z
@@ -11,7 +16,11 @@ export const createIssueBodySchema = z
   .object({
     project_id: z.string().min(1, 'project_id 必填'),
     title: z.string().min(1, '标题必填').max(200, '标题不能超过 200 字'),
-    body: z.string().max(200000, 'body 不能超过 200000 字').optional().nullable(),
+    body: z
+      .string()
+      .max(200000, 'body 不能超过 200000 字')
+      .optional()
+      .nullable(),
     status: issueStatusSchema.optional().default('todo'),
     priority: issuePrioritySchema.optional().default('p2'),
     label_ids: z.array(z.string()).optional().default([]),
@@ -23,8 +32,16 @@ export const createIssueBodySchema = z
 export const updateIssueBodySchema = z
   .object({
     project_id: z.string().min(1).optional(),
-    title: z.string().min(1, '标题必填').max(200, '标题不能超过 200 字').optional(),
-    body: z.string().max(200000, 'body 不能超过 200000 字').optional().nullable(),
+    title: z
+      .string()
+      .min(1, '标题必填')
+      .max(200, '标题不能超过 200 字')
+      .optional(),
+    body: z
+      .string()
+      .max(200000, 'body 不能超过 200000 字')
+      .optional()
+      .nullable(),
     status: issueStatusSchema.optional(),
     priority: issuePrioritySchema.optional(),
     label_ids: z.array(z.string()).optional(),
@@ -42,7 +59,9 @@ export const listIssuesQuerySchema = z
   .object({
     project_id: z.string().optional(),
     status: z.union([issueStatusSchema, z.array(issueStatusSchema)]).optional(),
-    priority: z.union([issuePrioritySchema, z.array(issuePrioritySchema)]).optional(),
+    priority: z
+      .union([issuePrioritySchema, z.array(issuePrioritySchema)])
+      .optional(),
     labels: z.array(z.string()).optional(),
     due_from: dateStringSchema.optional(),
     due_to: dateStringSchema.optional(),

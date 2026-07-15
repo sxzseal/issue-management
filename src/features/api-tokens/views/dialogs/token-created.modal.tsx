@@ -38,7 +38,12 @@ function currentBaseUrl(): string {
   return window.location.origin
 }
 
-export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCreatedModalProps) {
+export function TokenCreatedModal({
+  open,
+  onOpenChange,
+  token,
+  name,
+}: TokenCreatedModalProps) {
   const tokenCopy = useCopyToClipboard()
   const snippetCopy = useCopyToClipboard()
 
@@ -49,7 +54,7 @@ export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCrea
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-x-hidden overflow-y-auto sm:max-w-3xl">
+      <DialogContent className="max-h-[85vh] overflow-y-auto overflow-x-hidden sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Token 已生成 · {name}</DialogTitle>
           <DialogDescription>
@@ -66,7 +71,7 @@ export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCrea
             <code
               className={cn(
                 'min-w-0 flex-1 rounded-md border border-input bg-muted px-3 py-2',
-                'overflow-x-auto whitespace-nowrap font-mono text-xs text-foreground'
+                'overflow-x-auto whitespace-nowrap font-mono text-xs text-foreground',
               )}
             >
               {token ?? ''}
@@ -75,11 +80,17 @@ export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCrea
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => token && void tokenCopy.copy(token, '已复制 Token')}
+              onClick={() =>
+                token && void tokenCopy.copy(token, '已复制 Token')
+              }
               className="gap-1.5"
               disabled={!token}
             >
-              {tokenCopy.copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {tokenCopy.copied ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
               {tokenCopy.copied ? '已复制' : '复制'}
             </Button>
           </div>
@@ -96,7 +107,9 @@ export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCrea
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => snippet && void snippetCopy.copy(snippet, '已复制 AI 接入说明')}
+              onClick={() =>
+                snippet && void snippetCopy.copy(snippet, '已复制 AI 接入说明')
+              }
               className="gap-1.5"
               disabled={!snippet}
             >
@@ -109,14 +122,15 @@ export function TokenCreatedModal({ open, onOpenChange, token, name }: TokenCrea
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            贴到 Claude Code 的 <code className="font-mono">CLAUDE.md</code>、Cursor 的{' '}
-            <code className="font-mono">.cursorrules</code> 或任何 AI 工具的系统提示里，
-            AI 就能直接调用你的 issue-management API —— 增删改查、评论、改状态皆可。
+            贴到 Claude Code 的 <code className="font-mono">CLAUDE.md</code>
+            、Cursor 的 <code className="font-mono">.cursorrules</code> 或任何
+            AI 工具的系统提示里， AI 就能直接调用你的 issue-management API ——
+            增删改查、评论、改状态皆可。
           </p>
           <pre
             className={cn(
               'max-h-64 overflow-y-auto rounded-md border border-input bg-muted p-3',
-              'whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted-foreground'
+              'whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted-foreground',
             )}
           >
             <code className="break-words">{snippet}</code>

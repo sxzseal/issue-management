@@ -17,12 +17,16 @@ interface BoardColumnProps {
   onOpenStatus: (issue: Issue) => void
 }
 
-export function BoardColumn({ column, onCreate, onOpenStatus }: BoardColumnProps) {
+export function BoardColumn({
+  column,
+  onCreate,
+  onOpenStatus,
+}: BoardColumnProps) {
   const Icon = STATUS_ICON[column.status]
   return (
     <section
       aria-label={`${column.label} 列`}
-      className="flex flex-col min-h-0 min-w-0 rounded-lg border border-border bg-card/40"
+      className="flex min-h-0 min-w-0 flex-col rounded-lg border border-border bg-card/40"
     >
       <header className="flex flex-none items-center gap-2 border-b border-border px-3 py-2">
         <Icon
@@ -47,7 +51,7 @@ export function BoardColumn({ column, onCreate, onOpenStatus }: BoardColumnProps
         </Button>
       </header>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2" role="list">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2" role="list">
         {column.issues.length === 0 ? (
           <div className="grid h-32 place-items-center rounded-md border border-dashed border-input p-8 text-center text-xs text-muted-foreground">
             把卡片拖到这里

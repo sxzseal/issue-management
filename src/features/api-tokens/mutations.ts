@@ -33,9 +33,12 @@ export function useRevokeApiTokenMutation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) =>
-      request<ApiToken>(`/api/settings/api-tokens/${encodeURIComponent(id)}/revoke`, {
-        method: 'POST',
-      }),
+      request<ApiToken>(
+        `/api/settings/api-tokens/${encodeURIComponent(id)}/revoke`,
+        {
+          method: 'POST',
+        },
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['api-tokens'] })
       toast.success('Token 已撤销')

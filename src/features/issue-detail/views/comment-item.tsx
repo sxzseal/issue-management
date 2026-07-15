@@ -26,7 +26,11 @@ interface CommentItemProps {
   onDelete?: (id: string) => void
 }
 
-export function CommentItem({ comment, isSelf = true, onDelete }: CommentItemProps) {
+export function CommentItem({
+  comment,
+  isSelf = true,
+  onDelete,
+}: CommentItemProps) {
   const isOptimistic = comment.id.startsWith('tmp_')
 
   return (
@@ -43,7 +47,9 @@ export function CommentItem({ comment, isSelf = true, onDelete }: CommentItemPro
         aria-hidden
         className={cn(
           'grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-medium',
-          isSelf ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+          isSelf
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground',
         )}
       >
         {isSelf ? '我' : '?'}
@@ -59,7 +65,9 @@ export function CommentItem({ comment, isSelf = true, onDelete }: CommentItemPro
               作者
             </Badge>
           ) : null}
-          <span className="text-muted-foreground" aria-hidden>·</span>
+          <span className="text-muted-foreground" aria-hidden>
+            ·
+          </span>
           <span
             className="text-xs text-muted-foreground"
             title={comment.created_at.replace('T', ' ').slice(0, 16)}

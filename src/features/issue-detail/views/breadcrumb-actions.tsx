@@ -11,7 +11,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useNavigationType } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Check, Link as LinkIcon, Package, PackageOpen, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Check,
+  Link as LinkIcon,
+  Package,
+  PackageOpen,
+  Trash2,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -72,11 +79,16 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
         <span className="hidden sm:inline">返回</span>
       </Button>
       <Separator orientation="vertical" className="h-5" />
-      <nav aria-label="面包屑" className="min-w-0 truncate text-sm text-muted-foreground">
+      <nav
+        aria-label="面包屑"
+        className="min-w-0 truncate text-sm text-muted-foreground"
+      >
         <Link to="/board" className="hover:text-foreground">
           {project?.name ?? '项目'}
         </Link>
-        <span className="mx-1.5" aria-hidden>/</span>
+        <span className="mx-1.5" aria-hidden>
+          /
+        </span>
         <span className="font-mono text-xs">issue #{issue.id}</span>
       </nav>
 
@@ -132,7 +144,11 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
         </Button>
       </div>
 
-      <DeleteIssueModal issueId={issue.id} open={deleteOpen} onOpenChange={setDeleteOpen} />
+      <DeleteIssueModal
+        issueId={issue.id}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
     </div>
   )
 }

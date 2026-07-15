@@ -36,7 +36,10 @@ export const COMMENT_TABS = {
   preview: 'preview',
 } as const
 
-export const COMMENT_TAB_LABEL: Record<(typeof COMMENT_TABS)[keyof typeof COMMENT_TABS], string> = {
+export const COMMENT_TAB_LABEL: Record<
+  (typeof COMMENT_TABS)[keyof typeof COMMENT_TABS],
+  string
+> = {
   edit: '编辑',
   preview: '预览',
 }
@@ -110,12 +113,14 @@ export function renderMarkdown(md: string): string {
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
   // 拆代码块
-  const parts: Array<{ type: 'code' | 'text'; value: string; lang?: string }> = []
+  const parts: Array<{ type: 'code' | 'text'; value: string; lang?: string }> =
+    []
   const fenceRe = /```(\w+)?\n([\s\S]*?)```/g
   let last = 0
   let m: RegExpExecArray | null
   while ((m = fenceRe.exec(md)) !== null) {
-    if (m.index > last) parts.push({ type: 'text', value: md.slice(last, m.index) })
+    if (m.index > last)
+      parts.push({ type: 'text', value: md.slice(last, m.index) })
     parts.push({ type: 'code', value: m[2], lang: m[1] })
     last = m.index + m[0].length
   }
@@ -149,7 +154,10 @@ export function renderMarkdown(md: string): string {
       }
       const inline = (s: string) => {
         let t = escape(s)
-        t = t.replace(/`([^`]+)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-[0.85em]">$1</code>')
+        t = t.replace(
+          /`([^`]+)`/g,
+          '<code class="rounded bg-muted px-1 py-0.5 text-[0.85em]">$1</code>',
+        )
         t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         return t
       }
@@ -206,7 +214,11 @@ export function renderMarkdown(md: string): string {
             out.push('<table><tbody>')
             inTable = true
           }
-          out.push('<tr>' + cells.map((c) => `<td>${inline(c)}</td>`).join('') + '</tr>')
+          out.push(
+            '<tr>' +
+              cells.map((c) => `<td>${inline(c)}</td>`).join('') +
+              '</tr>',
+          )
           continue
         }
         if (line === '') {
@@ -226,7 +238,10 @@ export function renderMarkdown(md: string): string {
 }
 
 /** 简单相对时间（原型内本地实现，避免拉 dayjs） */
-export function relativeTime(iso: string, now: Date = new Date('2026-07-13T10:30:00Z')): string {
+export function relativeTime(
+  iso: string,
+  now: Date = new Date('2026-07-13T10:30:00Z'),
+): string {
   const t = new Date(iso).getTime()
   const diff = now.getTime() - t
   const min = Math.round(diff / 60_000)

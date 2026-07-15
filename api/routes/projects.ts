@@ -71,7 +71,11 @@ app.post('/', async (c) => {
   const parsed = createProjectBodySchema.safeParse(rawBody)
   if (!parsed.success) {
     const first = parsed.error.issues[0]
-    return err(c, ErrorCodes.VALIDATION_FAILED, first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const body = parsed.data
 
@@ -145,11 +149,19 @@ app.patch('/:id', async (c) => {
   const parsed = updateProjectBodySchema.safeParse(rawBody)
   if (!parsed.success) {
     const first = parsed.error.issues[0]
-    return err(c, ErrorCodes.VALIDATION_FAILED, first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const body = parsed.data
 
-  if (existing.is_inbox === 1 && body.name !== undefined && body.name !== existing.name) {
+  if (
+    existing.is_inbox === 1 &&
+    body.name !== undefined &&
+    body.name !== existing.name
+  ) {
     return err(c, ErrorCodes.VALIDATION_FAILED, 'Inbox 项目名不可修改')
   }
 
@@ -207,7 +219,11 @@ app.patch('/:id', async (c) => {
     .bind(id)
     .first<ProjectRow>()
   if (!updated) {
-    return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+    return err(
+      c,
+      ErrorCodes.INTERNAL_ERROR,
+      ErrorMessages[ErrorCodes.INTERNAL_ERROR],
+    )
   }
   return ok(c, rowToProject(updated))
 })
@@ -223,7 +239,11 @@ app.delete('/:id', async (c) => {
   })
   if (!queryParsed.success) {
     const first = queryParsed.error.issues[0]
-    return err(c, ErrorCodes.VALIDATION_FAILED, first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const { cascade } = queryParsed.data
 
@@ -248,7 +268,11 @@ app.delete('/:id', async (c) => {
 
   if (n > 0) {
     if (cascade === 'reject') {
-      return err(c, ErrorCodes.CONSTRAINT_CONFLICT, '项目下存在 issue，删除失败')
+      return err(
+        c,
+        ErrorCodes.CONSTRAINT_CONFLICT,
+        '项目下存在 issue，删除失败',
+      )
     }
     // reassign
     const now = new Date().toISOString()

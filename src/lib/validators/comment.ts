@@ -2,10 +2,7 @@ import { z } from 'zod'
 
 export const createCommentBodySchema = z
   .object({
-    body: z
-      .string()
-      .min(1, '评论不能为空')
-      .max(10000, '评论不能超过 10000 字'),
+    body: z.string().min(1, '评论不能为空').max(10000, '评论不能超过 10000 字'),
   })
   .strict()
 

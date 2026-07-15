@@ -8,7 +8,12 @@ interface EyeToggleProps {
   className?: string
 }
 
-export function EyeToggle({ show, onToggle, disabled, className }: EyeToggleProps) {
+export function EyeToggle({
+  show,
+  onToggle,
+  disabled,
+  className,
+}: EyeToggleProps) {
   const Icon = show ? EyeOff : Eye
   return (
     <Button

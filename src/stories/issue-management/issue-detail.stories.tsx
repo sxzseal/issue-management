@@ -131,16 +131,23 @@ function ActionBar({ issueId, archived }: ActionBarProps) {
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 gap-1 -ml-2 text-muted-foreground hover:text-foreground"
+        className="-ml-2 h-8 gap-1 text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         <span className="hidden sm:inline">返回列表</span>
       </Button>
       <Separator orientation="vertical" className="h-5" />
-      <span className="truncate text-xs font-mono text-muted-foreground">#{issueId}</span>
+      <span className="truncate font-mono text-xs text-muted-foreground">
+        #{issueId}
+      </span>
 
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="sm" className="h-8 gap-1.5" onClick={onCopy}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={onCopy}
+        >
           {copied ? (
             <>
               <Check className="h-3.5 w-3.5" />
@@ -171,13 +178,18 @@ function ActionBar({ issueId, archived }: ActionBarProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{DETAIL_ACTIONS.deleteConfirmTitle}</DialogTitle>
-              <DialogDescription>{DETAIL_ACTIONS.deleteConfirmBody}</DialogDescription>
+              <DialogDescription>
+                {DETAIL_ACTIONS.deleteConfirmBody}
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteOpen(false)}>
                 {DETAIL_ACTIONS.deleteConfirmCancel}
               </Button>
-              <Button variant="destructive" onClick={() => setDeleteOpen(false)}>
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteOpen(false)}
+              >
                 {DETAIL_ACTIONS.deleteConfirmOk}
               </Button>
             </DialogFooter>
@@ -218,7 +230,9 @@ function EditableTitle({ value }: EditableTitleProps) {
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">{DETAIL_ACTIONS.editTitleTooltip}</TooltipContent>
+          <TooltipContent side="bottom">
+            {DETAIL_ACTIONS.editTitleTooltip}
+          </TooltipContent>
         </Tooltip>
       </div>
     )
@@ -230,9 +244,13 @@ function EditableTitle({ value }: EditableTitleProps) {
         autoFocus
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
-        className="flex-1 h-10 text-lg font-semibold"
+        className="h-10 flex-1 text-lg font-semibold"
       />
-      <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => setEditing(false)}>
+      <Button
+        size="icon"
+        className="h-9 w-9 shrink-0"
+        onClick={() => setEditing(false)}
+      >
         <Check className="h-4 w-4" />
         <span className="sr-only">{DETAIL_ACTIONS.saveTitle}</span>
       </Button>
@@ -273,7 +291,9 @@ function MetaRow({ issue }: { issue: Issue }) {
       {issue.source_name ? (
         <>
           <span aria-hidden>·</span>
-          <span className="truncate font-mono text-xs">{issue.source_name}</span>
+          <span className="truncate font-mono text-xs">
+            {issue.source_name}
+          </span>
         </>
       ) : null}
     </div>
@@ -289,11 +309,11 @@ function BodyMarkdown({ md }: { md: string }) {
   return (
     <article
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none mt-6',
-        '[&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight',
-        '[&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-semibold',
+        'prose prose-sm dark:prose-invert mt-6 max-w-none',
+        '[&_h2]:mb-3 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight',
+        '[&_h3]:mb-2 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-semibold',
         '[&_p]:my-3 [&_p]:leading-relaxed [&_p]:text-foreground/90',
-        '[&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6',
+        '[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6',
         '[&_li]:my-1 [&_li]:leading-relaxed',
         '[&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/40 [&_blockquote]:bg-muted/30 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:text-muted-foreground',
         '[&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm',
@@ -310,10 +330,10 @@ function BodyMarkdown({ md }: { md: string }) {
 
 function CommentItem({ comment }: { comment: Comment }) {
   return (
-    <div className="group relative rounded-lg border border-border border-l-4 border-l-primary/60 bg-primary/[0.03] p-4 dark:bg-primary/[0.06]">
+    <div className="group relative rounded-lg border border-l-4 border-border border-l-primary/60 bg-primary/[0.03] p-4 dark:bg-primary/[0.06]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm">
-          <div className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+          <div className="grid h-6 w-6 place-items-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
             我
           </div>
           <span className="font-medium">me</span>
@@ -368,7 +388,7 @@ function CommentItem({ comment }: { comment: Comment }) {
 function CommentsList({ comments }: { comments: Comment[] }) {
   return (
     <section className="mt-8">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="mb-3 flex items-center gap-2">
         <h2 className="text-sm font-semibold">评论 · {comments.length}</h2>
         <Separator className="flex-1" />
       </div>
@@ -391,7 +411,8 @@ function CommentComposer() {
   const [submitting, setSubmitting] = useState(false)
 
   const previewHtml = useMemo(() => {
-    if (!draft.trim()) return '<p class="text-muted-foreground">还没有内容可预览。</p>'
+    if (!draft.trim())
+      return '<p class="text-muted-foreground">还没有内容可预览。</p>'
     return renderMarkdown(draft)
   }, [draft])
 
@@ -413,7 +434,10 @@ function CommentComposer() {
             <TabsTrigger value={COMMENT_TABS.edit} className="h-6 px-3 text-xs">
               {COMMENT_TAB_LABEL.edit}
             </TabsTrigger>
-            <TabsTrigger value={COMMENT_TABS.preview} className="h-6 px-3 text-xs">
+            <TabsTrigger
+              value={COMMENT_TABS.preview}
+              className="h-6 px-3 text-xs"
+            >
               {COMMENT_TAB_LABEL.preview}
             </TabsTrigger>
           </TabsList>
@@ -450,9 +474,9 @@ function CommentComposer() {
         <TabsContent value={COMMENT_TABS.preview} className="mt-2">
           <article
             className={cn(
-              'prose prose-sm dark:prose-invert max-w-none min-h-24 rounded-md border border-border bg-card p-3',
+              'prose prose-sm dark:prose-invert min-h-24 max-w-none rounded-md border border-border bg-card p-3',
               '[&_p]:my-2 [&_p]:leading-relaxed',
-              '[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6',
+              '[&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6',
             )}
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
@@ -518,7 +542,10 @@ function StatusCard({ status }: { status: IssueStatus }) {
               <span className="inline-flex items-center gap-2">
                 <span
                   aria-hidden
-                  className={cn('h-2 w-2 rounded-full', STATUS_TONE[s].split(' ')[0])}
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    STATUS_TONE[s].split(' ')[0],
+                  )}
                 />
                 {STATUS_LABEL[s]}
               </span>
@@ -544,7 +571,10 @@ function PriorityCard({ priority }: { priority: IssuePriority }) {
               <span className="inline-flex items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className={cn('h-4 px-1 text-[10px] tabular-nums', PRIORITY_TONE[p])}
+                  className={cn(
+                    'h-4 px-1 text-[10px] tabular-nums',
+                    PRIORITY_TONE[p],
+                  )}
                 >
                   {PRIORITY_SHORT[p]}
                 </Badge>
@@ -564,7 +594,11 @@ function ProjectCard({ projectId }: { projectId: string }) {
     <SideCard
       title={SIDE_LABELS.project}
       action={
-        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 px-1.5 text-xs text-muted-foreground"
+        >
           {SIDE_LABELS.change}
         </Button>
       }
@@ -593,7 +627,11 @@ function LabelsCard({ labelIds }: { labelIds: string[] }) {
     <SideCard
       title={SIDE_LABELS.labels}
       action={
-        <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 px-1.5 text-xs text-muted-foreground"
+        >
           {SIDE_LABELS.addLabel}
         </Button>
       }
@@ -636,7 +674,9 @@ function DueDateCard({ dueDate }: { dueDate: string | null }) {
         />
       </div>
       {!value ? (
-        <p className="mt-1 text-xs text-muted-foreground">{SIDE_LABELS.noDueDate}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {SIDE_LABELS.noDueDate}
+        </p>
       ) : null}
     </SideCard>
   )
@@ -678,14 +718,20 @@ function ActivityCard() {
  * 页面容器
  * -------------------------------------------------------------------------- */
 
-function DetailPage({ issue, comments }: { issue: Issue & { body_full: string }; comments: Comment[] }) {
+function DetailPage({
+  issue,
+  comments,
+}: {
+  issue: Issue & { body_full: string }
+  comments: Comment[]
+}) {
   return (
     <TooltipProvider>
       <div className="flex h-full flex-col overflow-hidden">
         <ActionBar issueId={issue.id} archived={issue.status === 'archived'} />
-        <div className="flex flex-1 min-h-0">
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-6 pb-4">
+        <div className="flex min-h-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-6">
               <EditableTitle value={issue.title} />
               <MetaRow issue={issue} />
               <BodyMarkdown md={issue.body_full} />
@@ -718,11 +764,11 @@ function LoadingPage() {
     <div className="flex h-full flex-col overflow-hidden">
       <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-card/40 px-4">
         <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-4 w-16 ml-auto" />
+        <Skeleton className="ml-auto h-4 w-16" />
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className="flex flex-1 min-h-0">
-        <div className="flex-1 min-w-0 overflow-y-auto p-6 space-y-4">
+      <div className="flex min-h-0 flex-1">
+        <div className="min-w-0 flex-1 space-y-4 overflow-y-auto p-6">
           <Skeleton className="h-8 w-3/4" />
           <div className="flex gap-2">
             <Skeleton className="h-4 w-24" />
@@ -739,12 +785,12 @@ function LoadingPage() {
             <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-4 w-3/5" />
           </div>
-          <div className="pt-6 space-y-3">
+          <div className="space-y-3 pt-6">
             <Skeleton className="h-24 w-full rounded-lg" />
             <Skeleton className="h-24 w-full rounded-lg" />
           </div>
         </div>
-        <aside className="hidden shrink-0 overflow-y-auto border-l border-border bg-card/30 p-4 lg:block lg:w-80 space-y-3">
+        <aside className="hidden shrink-0 space-y-3 overflow-y-auto border-l border-border bg-card/30 p-4 lg:block lg:w-80">
           <Skeleton className="h-20 w-full rounded-md" />
           <Skeleton className="h-20 w-full rounded-md" />
           <Skeleton className="h-20 w-full rounded-md" />
@@ -766,19 +812,21 @@ function NotFoundPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 gap-1 -ml-2 text-muted-foreground hover:text-foreground"
+          className="-ml-2 h-8 gap-1 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           返回列表
         </Button>
       </div>
-      <div className="flex flex-1 min-h-0 items-center justify-center p-6">
+      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
         <div className="max-w-sm text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted text-muted-foreground">
             <FileText className="h-6 w-6" />
           </div>
           <h2 className="mt-4 text-lg font-semibold">{NOT_FOUND_COPY.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{NOT_FOUND_COPY.hint}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {NOT_FOUND_COPY.hint}
+          </p>
           <p className="mt-2 font-mono text-xs text-muted-foreground">
             id: {NOT_FOUND_ID}
           </p>
@@ -814,7 +862,11 @@ export const v1: Story = {
   name: 'v1',
   tags: ['draft'],
   render: () => (
-    <AppShell activeNav="board" activeProjectId="proj_forge" breadcrumb="ai-forge / issue #42">
+    <AppShell
+      activeNav="board"
+      activeProjectId="proj_forge"
+      breadcrumb="ai-forge / issue #42"
+    >
       <DetailPage issue={DETAIL_ISSUE} comments={DETAIL_COMMENTS} />
     </AppShell>
   ),
@@ -824,7 +876,11 @@ export const Loading: Story = {
   name: 'Loading',
   tags: ['draft'],
   render: () => (
-    <AppShell activeNav="board" activeProjectId="proj_forge" breadcrumb="ai-forge / issue #42">
+    <AppShell
+      activeNav="board"
+      activeProjectId="proj_forge"
+      breadcrumb="ai-forge / issue #42"
+    >
       <LoadingPage />
     </AppShell>
   ),
@@ -834,7 +890,11 @@ export const NotFound: Story = {
   name: 'NotFound',
   tags: ['draft'],
   render: () => (
-    <AppShell activeNav="board" activeProjectId="proj_forge" breadcrumb="ai-forge / 未找到">
+    <AppShell
+      activeNav="board"
+      activeProjectId="proj_forge"
+      breadcrumb="ai-forge / 未找到"
+    >
       <NotFoundPage />
     </AppShell>
   ),

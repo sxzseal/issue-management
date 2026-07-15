@@ -96,7 +96,12 @@ function formatRelative(iso: string): string {
   return iso.slice(0, 10).replace(/-/g, '/')
 }
 
-const PRIORITY_RANK: Record<IssuePriority, number> = { p0: 0, p1: 1, p2: 2, p3: 3 }
+const PRIORITY_RANK: Record<IssuePriority, number> = {
+  p0: 0,
+  p1: 1,
+  p2: 2,
+  p3: 3,
+}
 const STATUS_RANK: Record<IssueStatus, number> = {
   todo: 0,
   in_progress: 1,
@@ -106,12 +111,18 @@ const STATUS_RANK: Record<IssueStatus, number> = {
 
 type SortKey = ListFiltersState['sort']
 
-function sortIssues(list: Issue[], sort: SortKey, order: 'asc' | 'desc'): Issue[] {
+function sortIssues(
+  list: Issue[],
+  sort: SortKey,
+  order: 'asc' | 'desc',
+): Issue[] {
   const copy = [...list]
   copy.sort((a, b) => {
     let cmp = 0
-    if (sort === 'priority') cmp = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
-    else if (sort === 'status') cmp = STATUS_RANK[a.status] - STATUS_RANK[b.status]
+    if (sort === 'priority')
+      cmp = PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
+    else if (sort === 'status')
+      cmp = STATUS_RANK[a.status] - STATUS_RANK[b.status]
     else {
       const av = a[sort]
       const bv = b[sort]
@@ -151,7 +162,10 @@ function StatusBadge({ status }: { status: IssueStatus }) {
     archived: 'border-muted-foreground/20 text-muted-foreground/70',
   }
   return (
-    <Badge variant="outline" className={cn('font-normal whitespace-nowrap', tone[status])}>
+    <Badge
+      variant="outline"
+      className={cn('whitespace-nowrap font-normal', tone[status])}
+    >
       {STATUS_LABEL[status]}
     </Badge>
   )
@@ -162,7 +176,7 @@ function PriorityBadge({ priority }: { priority: IssuePriority }) {
     <Badge
       variant="outline"
       className={cn(
-        'font-medium tabular-nums whitespace-nowrap',
+        'whitespace-nowrap font-medium tabular-nums',
         PRIORITY_COLOR_CLASS[priority],
       )}
     >
@@ -175,7 +189,7 @@ function ProjectCell({ projectId }: { projectId: string }) {
   const project = projectById(projectId)
   if (!project) return <span className="text-muted-foreground">—</span>
   return (
-    <div className="flex items-center gap-1.5 min-w-0">
+    <div className="flex min-w-0 items-center gap-1.5">
       <span
         aria-hidden
         className="h-2 w-2 shrink-0 rounded-full"
@@ -188,7 +202,8 @@ function ProjectCell({ projectId }: { projectId: string }) {
 
 function LabelChips({ labelIds }: { labelIds: string[] }) {
   const labels = labelsByIds(labelIds)
-  if (labels.length === 0) return <span className="text-muted-foreground text-xs">—</span>
+  if (labels.length === 0)
+    return <span className="text-xs text-muted-foreground">—</span>
   return (
     <div className="flex flex-wrap gap-1">
       {labels.slice(0, 2).map((l) => (
@@ -205,7 +220,9 @@ function LabelChips({ labelIds }: { labelIds: string[] }) {
         </span>
       ))}
       {labels.length > 2 ? (
-        <span className="text-[11px] text-muted-foreground">+{labels.length - 2}</span>
+        <span className="text-[11px] text-muted-foreground">
+          +{labels.length - 2}
+        </span>
       ) : null}
     </div>
   )
@@ -218,7 +235,7 @@ function RowActions() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          className="h-7 w-7 opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
           aria-label="更多操作"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -241,7 +258,12 @@ function RowActions() {
 // Filter bar
 // ────────────────────────────────────────────────────────────────
 
-const STATUS_OPTIONS: IssueStatus[] = ['todo', 'in_progress', 'done', 'archived']
+const STATUS_OPTIONS: IssueStatus[] = [
+  'todo',
+  'in_progress',
+  'done',
+  'archived',
+]
 const PRIORITY_OPTIONS: IssuePriority[] = ['p0', 'p1', 'p2', 'p3']
 
 function MultiSelectPopover({
@@ -316,7 +338,10 @@ function ProjectSelect({
         <Button
           variant="outline"
           size="sm"
-          className={cn('h-8 border-dashed', value && 'border-primary/50 bg-primary/5')}
+          className={cn(
+            'h-8 border-dashed',
+            value && 'border-primary/50 bg-primary/5',
+          )}
         >
           项目
           {value ? (
@@ -377,10 +402,7 @@ function ActiveFilterChip({
   onRemove: () => void
 }) {
   return (
-    <Badge
-      variant="secondary"
-      className="gap-1 pl-2 pr-1 font-normal"
-    >
+    <Badge variant="secondary" className="gap-1 pl-2 pr-1 font-normal">
       {label}
       <button
         type="button"
@@ -407,18 +429,24 @@ function FilterBar({
     arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]
 
   return (
-    <div className="shrink-0 border-b border-border p-3 flex flex-col gap-2 bg-card/30">
+    <div className="flex shrink-0 flex-col gap-2 border-b border-border bg-card/30 p-3">
       <div className="flex flex-wrap items-center gap-2">
         <ProjectSelect
           value={filters.project_id}
-          onChange={(v) => setFilters((f) => ({ ...f, project_id: v, page: 1 }))}
+          onChange={(v) =>
+            setFilters((f) => ({ ...f, project_id: v, page: 1 }))
+          }
         />
         <MultiSelectPopover
           label="状态"
           options={STATUS_OPTIONS}
           values={filters.status}
           onToggle={(v) =>
-            setFilters((f) => ({ ...f, status: toggleIn(f.status, v), page: 1 }))
+            setFilters((f) => ({
+              ...f,
+              status: toggleIn(f.status, v),
+              page: 1,
+            }))
           }
           renderLabel={(v) => STATUS_LABEL[v as IssueStatus]}
         />
@@ -427,13 +455,17 @@ function FilterBar({
           options={PRIORITY_OPTIONS}
           values={filters.priority}
           onToggle={(v) =>
-            setFilters((f) => ({ ...f, priority: toggleIn(f.priority, v), page: 1 }))
+            setFilters((f) => ({
+              ...f,
+              priority: toggleIn(f.priority, v),
+              page: 1,
+            }))
           }
           renderLabel={(v) => PRIORITY_SHORT[v as IssuePriority]}
         />
 
-        <div className="relative ml-auto flex-1 min-w-0 max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative ml-auto min-w-0 max-w-xs flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             value={filters.q}
@@ -441,7 +473,7 @@ function FilterBar({
               setFilters((f) => ({ ...f, q: e.target.value, page: 1 }))
             }
             placeholder="搜索标题…"
-            className="pl-8 h-8"
+            className="h-8 pl-8"
             aria-label="搜索 issue 标题"
           />
         </div>
@@ -450,7 +482,7 @@ function FilterBar({
           <button
             type="button"
             onClick={() => setFilters(DEFAULT_FILTERS)}
-            className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
           >
             清除全部
           </button>
@@ -537,7 +569,7 @@ function SortableHeader({
         type="button"
         onClick={() => onSortClick(columnKey)}
         className={cn(
-          'inline-flex items-center gap-1 text-xs font-medium hover:text-foreground transition-colors',
+          'inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-foreground',
           active ? 'text-foreground' : 'text-muted-foreground',
         )}
       >
@@ -569,7 +601,7 @@ function IssueTable({
   return (
     <>
       {/* desktop / tablet table */}
-      <Table className="hidden md:table table-fixed">
+      <Table className="hidden table-fixed md:table">
         <TableHeader className="sticky top-0 z-20 bg-background shadow-[0_1px_0_0_hsl(var(--border))]">
           <TableRow>
             <SortableHeader
@@ -616,7 +648,7 @@ function IssueTable({
               sort={filters.sort}
               order={filters.order}
               onSortClick={onSortClick}
-              className="hidden lg:table-cell w-[9%]"
+              className="hidden w-[9%] lg:table-cell"
             />
             <TableHead className="w-8" />
           </TableRow>
@@ -625,17 +657,21 @@ function IssueTable({
           {rows.map((issue) => (
             <TableRow key={issue.id} className="group">
               <TableCell className="min-w-0">
-                <div className="flex items-start gap-2 min-w-0">
+                <div className="flex min-w-0 items-start gap-2">
                   {issue.source === 'api' ? (
                     <KeyRoundIcon
-                      className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground"
+                      className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground"
                       aria-label="API Token 来源"
                     />
                   ) : null}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{issue.title}</p>
+                    <p className="truncate text-sm font-medium">
+                      {issue.title}
+                    </p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground md:hidden">
-                      {labelsByIds(issue.label_ids).map((l) => l.name).join(' · ')}
+                      {labelsByIds(issue.label_ids)
+                        .map((l) => l.name)
+                        .join(' · ')}
                     </p>
                   </div>
                 </div>
@@ -652,10 +688,10 @@ function IssueTable({
               <TableCell>
                 <LabelChips labelIds={issue.label_ids} />
               </TableCell>
-              <TableCell className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+              <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
                 {formatDate(issue.due_date)}
               </TableCell>
-              <TableCell className="hidden lg:table-cell text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+              <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
                 {formatRelative(issue.updated_at)}
               </TableCell>
               <TableCell className="text-right">
@@ -667,14 +703,14 @@ function IssueTable({
       </Table>
 
       {/* mobile card list */}
-      <ul className="md:hidden flex flex-col divide-y divide-border">
+      <ul className="flex flex-col divide-y divide-border md:hidden">
         {rows.map((issue) => (
-          <li key={issue.id} className="px-3 py-3 flex flex-col gap-1.5 group">
-            <div className="flex items-start gap-2 min-w-0">
+          <li key={issue.id} className="group flex flex-col gap-1.5 px-3 py-3">
+            <div className="flex min-w-0 items-start gap-2">
               {issue.source === 'api' ? (
-                <KeyRoundIcon className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground" />
+                <KeyRoundIcon className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               ) : null}
-              <p className="flex-1 min-w-0 text-sm font-medium line-clamp-2">
+              <p className="line-clamp-2 min-w-0 flex-1 text-sm font-medium">
                 {issue.title}
               </p>
               <RowActions />
@@ -707,7 +743,9 @@ function EmptyState({ onReset }: { onReset: () => void }) {
       </div>
       <div className="space-y-1">
         <p className="text-sm font-medium">{EMPTY_STATE_CONFIG.title}</p>
-        <p className="text-xs text-muted-foreground">{EMPTY_STATE_CONFIG.desc}</p>
+        <p className="text-xs text-muted-foreground">
+          {EMPTY_STATE_CONFIG.desc}
+        </p>
       </div>
       <Button variant="outline" size="sm" onClick={onReset}>
         清除全部筛选
@@ -718,7 +756,7 @@ function EmptyState({ onReset }: { onReset: () => void }) {
 
 function LoadingRows({ count = 8 }: { count?: number }) {
   return (
-    <Table className="hidden md:table table-fixed">
+    <Table className="hidden table-fixed md:table">
       <TableHeader className="sticky top-0 z-20 bg-background shadow-[0_1px_0_0_hsl(var(--border))]">
         <TableRow>
           <TableHead className="w-[36%] text-xs font-medium text-muted-foreground">
@@ -739,7 +777,7 @@ function LoadingRows({ count = 8 }: { count?: number }) {
           <TableHead className="w-[9%] text-xs font-medium text-muted-foreground">
             到期
           </TableHead>
-          <TableHead className="hidden lg:table-cell w-[9%] text-xs font-medium text-muted-foreground">
+          <TableHead className="hidden w-[9%] text-xs font-medium text-muted-foreground lg:table-cell">
             更新时间
           </TableHead>
           <TableHead className="w-8" />
@@ -801,10 +839,14 @@ function Pagination({
   const canPrev = page > 1
   const canNext = page < totalPages
   return (
-    <div className="shrink-0 border-t border-border p-3 flex flex-wrap items-center justify-between gap-2 bg-card/30">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-card/30 p-3">
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span>
-          共 <span className="tabular-nums text-foreground font-medium">{total}</span> 条
+          共{' '}
+          <span className="font-medium tabular-nums text-foreground">
+            {total}
+          </span>{' '}
+          条
         </span>
         <div className="flex items-center gap-1.5">
           <span>每页</span>
@@ -885,7 +927,11 @@ interface ListPageProps {
   emptyOverride?: boolean
 }
 
-function ListPage({ initialFilters, loading = false, emptyOverride = false }: ListPageProps) {
+function ListPage({
+  initialFilters,
+  loading = false,
+  emptyOverride = false,
+}: ListPageProps) {
   const [filters, setFilters] = React.useState<ListFiltersState>({
     ...DEFAULT_FILTERS,
     ...initialFilters,
@@ -912,9 +958,13 @@ function ListPage({ initialFilters, loading = false, emptyOverride = false }: Li
   return (
     <AppShell activeNav="list" breadcrumb="全部项目">
       <section className="flex h-full flex-col overflow-hidden">
-        <FilterBar filters={filters} setFilters={setFilters} activeCount={activeCount} />
+        <FilterBar
+          filters={filters}
+          setFilters={setFilters}
+          activeCount={activeCount}
+        />
 
-        <div className="flex-1 min-h-0 overflow-hidden [&>div]:h-full [&>div]:min-h-0 [&>ul]:h-full [&>ul]:overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-hidden [&>div]:h-full [&>div]:min-h-0 [&>ul]:h-full [&>ul]:overflow-y-auto">
           {loading ? (
             <LoadingRows />
           ) : rows.length === 0 ? (

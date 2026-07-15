@@ -4,8 +4,17 @@
  * 状态列图标 / 优先级配色（用 hardcoded semantic 语义色作高亮标记，story 层允许）
  */
 
-import { Circle, PlayCircle, CheckCircle2, Archive, type LucideIcon } from 'lucide-react'
-import type { IssueStatus, IssuePriority } from '@/stories/issue-management/_shared/domain'
+import {
+  Circle,
+  PlayCircle,
+  CheckCircle2,
+  Archive,
+  type LucideIcon,
+} from 'lucide-react'
+import type {
+  IssueStatus,
+  IssuePriority,
+} from '@/stories/issue-management/_shared/domain'
 
 export const STATUS_ICON: Record<IssueStatus, LucideIcon> = {
   todo: Circle,

@@ -12,7 +12,12 @@ export const STATUS_LABELS: Record<IssueStatus, string> = {
   archived: '已归档',
 }
 
-export const BOARD_COLUMNS: readonly IssueStatus[] = ['todo', 'in_progress', 'done', 'archived'] as const
+export const BOARD_COLUMNS: readonly IssueStatus[] = [
+  'todo',
+  'in_progress',
+  'done',
+  'archived',
+] as const
 /** @deprecated Import STATUS_LABELS instead. */
 export const BOARD_COLUMN_LABELS: Record<IssueStatus, string> = STATUS_LABELS
 

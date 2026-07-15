@@ -4,7 +4,13 @@
  * has keyboard focus). Delete lives under a hover-revealed dropdown; a small
  * inline dialog confirms before firing the mutation.
  */
-import { memo, useMemo, useState, type MouseEvent, type KeyboardEvent } from 'react'
+import {
+  memo,
+  useMemo,
+  useState,
+  type MouseEvent,
+  type KeyboardEvent,
+} from 'react'
 import { Trash2, KeyRound } from 'lucide-react'
 import type { Issue, Label } from '@/lib/api-types'
 import { TableCell, TableRow } from '@/components/ui/table'
@@ -60,7 +66,8 @@ function formatDate(iso: string | null): string {
 }
 
 function LabelChips({ labels }: { labels: Label[] }) {
-  if (labels.length === 0) return <span className="text-xs text-muted-foreground">—</span>
+  if (labels.length === 0)
+    return <span className="text-xs text-muted-foreground">—</span>
   const visible = labels.slice(0, 3)
   const extra = labels.length - visible.length
   return (
@@ -78,24 +85,33 @@ function LabelChips({ labels }: { labels: Label[] }) {
           <span className="max-w-[6rem] truncate">{l.name}</span>
         </span>
       ))}
-      {extra > 0 && <span className="text-[11px] text-muted-foreground">+{extra}</span>}
+      {extra > 0 && (
+        <span className="text-[11px] text-muted-foreground">+{extra}</span>
+      )}
     </div>
   )
 }
 
-export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: IssueTableRowProps) {
+export const IssueTableRow = memo(function IssueTableRow({
+  issue,
+  onActivate,
+}: IssueTableRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const deleteMutation = useDeleteIssueMutation()
 
   // formatRelative is pure over updated_at; memoize so the string doesn't churn
   // when the row re-renders for reasons unrelated to updated_at (e.g. sibling
   // row activation flipping a shared parent state).
-  const updatedLabel = useMemo(() => formatRelative(issue.updated_at), [issue.updated_at])
+  const updatedLabel = useMemo(
+    () => formatRelative(issue.updated_at),
+    [issue.updated_at],
+  )
 
   const handleRowClick = (e: MouseEvent<HTMLTableRowElement>) => {
     // Ignore clicks that originated in an interactive descendant.
     const target = e.target as HTMLElement
-    if (target.closest('button, a, [role="menu"], [data-no-row-activate]')) return
+    if (target.closest('button, a, [role="menu"], [data-no-row-activate]'))
+      return
     onActivate(issue.id)
   }
 
@@ -123,7 +139,7 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
         onKeyDown={handleKeyDown}
       >
         <TableCell className="min-w-0">
-          <div className="flex items-start gap-2 min-w-0">
+          <div className="flex min-w-0 items-start gap-2">
             {issue.source === 'api' && (
               <TooltipProvider>
                 <Tooltip>
@@ -140,7 +156,8 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
+                    来源：API Token
+                    {issue.source_name ? ` · ${issue.source_name}` : ''}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -155,7 +172,7 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
           </div>
         </TableCell>
         <TableCell>
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
             <span
               aria-hidden
               className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/60"
@@ -168,7 +185,10 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
         <TableCell>
           <Badge
             variant="outline"
-            className={cn('whitespace-nowrap font-normal', STATUS_CLASS[issue.status])}
+            className={cn(
+              'whitespace-nowrap font-normal',
+              STATUS_CLASS[issue.status],
+            )}
           >
             {STATUS_LABEL[issue.status]}
           </Badge>
@@ -178,7 +198,7 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
             variant="outline"
             className={cn(
               'whitespace-nowrap font-medium tabular-nums',
-              PRIORITY_CLASS[issue.priority]
+              PRIORITY_CLASS[issue.priority],
             )}
           >
             {PRIORITY_LABEL[issue.priority]}
@@ -187,10 +207,10 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
         <TableCell className="hidden lg:table-cell">
           <LabelChips labels={issue.labels} />
         </TableCell>
-        <TableCell className="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
+        <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
           {formatDate(issue.due_date)}
         </TableCell>
-        <TableCell className="hidden lg:table-cell whitespace-nowrap text-xs text-muted-foreground tabular-nums">
+        <TableCell className="hidden whitespace-nowrap text-xs tabular-nums text-muted-foreground lg:table-cell">
           {updatedLabel}
         </TableCell>
         <TableCell className="sticky right-0 z-10 w-[88px] bg-background pr-4 text-center shadow-[inset_1px_0_0_0_hsl(var(--border))] group-hover:bg-muted/50">

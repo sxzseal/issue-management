@@ -54,7 +54,12 @@ export function CommentComposer({ onSubmit, className }: CommentComposerProps) {
   }
 
   return (
-    <div className={cn('flex-none border-t border-border bg-background p-4', className)}>
+    <div
+      className={cn(
+        'flex-none border-t border-border bg-background p-4',
+        className,
+      )}
+    >
       <Tabs value={tab} onValueChange={setTab}>
         <div className="flex items-center justify-between gap-2">
           <TabsList className="h-8">

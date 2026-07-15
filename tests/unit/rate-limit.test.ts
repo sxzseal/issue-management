@@ -36,16 +36,25 @@ function makeKv() {
       get: vi.fn(async (key: string) => {
         const entry = store.get(key)
         if (!entry) return null
-        if (entry.ttl !== undefined && now - entry.writtenAt > entry.ttl * 1000) {
+        if (
+          entry.ttl !== undefined &&
+          now - entry.writtenAt > entry.ttl * 1000
+        ) {
           store.delete(key)
           return null
         }
         return entry.value
       }),
-      put: vi.fn(async (key: string, value: string, opts?: { expirationTtl?: number }) => {
-        puts.push({ key, ttl: opts?.expirationTtl })
-        store.set(key, { value, ttl: opts?.expirationTtl, writtenAt: now })
-      }),
+      put: vi.fn(
+        async (
+          key: string,
+          value: string,
+          opts?: { expirationTtl?: number },
+        ) => {
+          puts.push({ key, ttl: opts?.expirationTtl })
+          store.set(key, { value, ttl: opts?.expirationTtl, writtenAt: now })
+        },
+      ),
       // Unused by rate-limit, but the KVNamespace type expects them.
       delete: vi.fn(),
       list: vi.fn(),
@@ -55,7 +64,10 @@ function makeKv() {
 
 // Pin Date.now to the mock's clock so rate-limit's window arithmetic is
 // deterministic across the test file.
-function withMockedNow<T>(getMs: () => number, fn: () => Promise<T>): Promise<T> {
+function withMockedNow<T>(
+  getMs: () => number,
+  fn: () => Promise<T>,
+): Promise<T> {
   const spy = vi.spyOn(Date, 'now').mockImplementation(getMs)
   return fn().finally(() => spy.mockRestore())
 }

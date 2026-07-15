@@ -23,10 +23,13 @@ interface EnvelopeShape {
 }
 
 function looksLikeEnvelope(x: unknown): x is EnvelopeShape {
-  return typeof x === 'object' && x !== null
-    && 'status_code' in x
-    && typeof (x as { status_code: unknown }).status_code === 'number'
-    && 'data' in x
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    'status_code' in x &&
+    typeof (x as { status_code: unknown }).status_code === 'number' &&
+    'data' in x
+  )
 }
 
 export function envelopeInvariant(): MiddlewareHandler<{ Bindings: Env }> {
@@ -43,12 +46,19 @@ export function envelopeInvariant(): MiddlewareHandler<{ Bindings: Env }> {
       payload = await cloned.json()
     } catch {
       // diagnostic-only console.warn — allowed
-      console.warn('[envelope] non-JSON body on application/json response', c.req.path)
+      console.warn(
+        '[envelope] non-JSON body on application/json response',
+        c.req.path,
+      )
       return
     }
     if (!looksLikeEnvelope(payload)) {
       // diagnostic-only console.warn — allowed
-      console.warn('[envelope] response missing envelope shape', c.req.path, payload)
+      console.warn(
+        '[envelope] response missing envelope shape',
+        c.req.path,
+        payload,
+      )
       return
     }
     validateTimeFields(payload.data, c.req.path)
@@ -77,11 +87,19 @@ function validateTimeFields(node: unknown, path: string): void {
     if (v === null || v === undefined) continue
     if (ISO_FIELDS.has(k) && typeof v === 'string' && !isIsoUtc(v)) {
       // diagnostic-only console.warn — allowed
-      console.warn(`[envelope] field ${k}=${JSON.stringify(v)} not ISO 8601 UTC at ${path}`)
+      console.warn(
+        `[envelope] field ${k}=${JSON.stringify(v)} not ISO 8601 UTC at ${path}`,
+      )
     }
-    if (DATE_ONLY_FIELDS.has(k) && typeof v === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    if (
+      DATE_ONLY_FIELDS.has(k) &&
+      typeof v === 'string' &&
+      !/^\d{4}-\d{2}-\d{2}$/.test(v)
+    ) {
       // diagnostic-only console.warn — allowed
-      console.warn(`[envelope] field ${k}=${JSON.stringify(v)} not YYYY-MM-DD at ${path}`)
+      console.warn(
+        `[envelope] field ${k}=${JSON.stringify(v)} not YYYY-MM-DD at ${path}`,
+      )
     }
     if (typeof v === 'object') validateTimeFields(v, path)
   }

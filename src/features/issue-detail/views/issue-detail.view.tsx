@@ -79,7 +79,9 @@ function MetaRow({ issue }: { issue: IssueDetail }) {
       {issue.external_ref ? (
         <>
           <span aria-hidden>·</span>
-          <span className="truncate font-mono text-xs">{issue.external_ref}</span>
+          <span className="truncate font-mono text-xs">
+            {issue.external_ref}
+          </span>
         </>
       ) : null}
     </div>
@@ -117,13 +119,16 @@ export function IssueDetailView() {
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="flex h-12 flex-none items-center gap-2 border-b border-border bg-card/40 px-4" />
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-            <SkeletonList rows={8} className="flex-1 min-h-0 overflow-y-auto p-6" />
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <SkeletonList
+              rows={8}
+              className="min-h-0 flex-1 overflow-y-auto p-6"
+            />
           </div>
           <aside
             className={cn(
-              'hidden lg:flex w-80 flex-none flex-col overflow-y-auto',
+              'hidden w-80 flex-none flex-col overflow-y-auto lg:flex',
               'border-l border-border bg-card/30 p-4',
             )}
           >
@@ -146,11 +151,11 @@ export function IssueDetailView() {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
         <BreadcrumbActions issue={issue} />
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-y-auto px-8 py-6 space-y-6">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-8 py-6">
               <div>
                 <InlineEditableTitle
                   value={issue.title}
@@ -196,7 +201,7 @@ export function IssueDetailView() {
           </div>
           <aside
             className={cn(
-              'hidden lg:flex w-80 flex-none flex-col overflow-y-auto',
+              'hidden w-80 flex-none flex-col overflow-y-auto lg:flex',
               'border-l border-border bg-card/30 p-4',
             )}
           >

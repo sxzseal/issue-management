@@ -13,7 +13,13 @@ import {
   VALID_PASSWORD,
 } from '../../../mocks/fixtures/auth'
 
-export { BRAND, DEFAULT_FORM, FROZEN_PASSWORD, RATE_LIMITED_STATE, VALID_PASSWORD }
+export {
+  BRAND,
+  DEFAULT_FORM,
+  FROZEN_PASSWORD,
+  RATE_LIMITED_STATE,
+  VALID_PASSWORD,
+}
 
 export const loginSchema = z.object({
   password: z

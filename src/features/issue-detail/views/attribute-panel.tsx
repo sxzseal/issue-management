@@ -128,7 +128,10 @@ export function AttributePanel({ issue }: AttributePanelProps) {
               {STATUS_ORDER.map((s) => (
                 <SelectItem key={s} value={s}>
                   <span className="inline-flex items-center gap-2">
-                    <span aria-hidden className={cn('h-2 w-2 rounded-full', STATUS_DOT[s])} />
+                    <span
+                      aria-hidden
+                      className={cn('h-2 w-2 rounded-full', STATUS_DOT[s])}
+                    />
                     {STATUS_LABEL[s]}
                   </span>
                 </SelectItem>
@@ -151,7 +154,10 @@ export function AttributePanel({ issue }: AttributePanelProps) {
                   <span className="inline-flex items-center gap-2">
                     <Badge
                       variant="secondary"
-                      className={cn('h-4 px-1 text-[10px] tabular-nums', PRIORITY_TONE[p])}
+                      className={cn(
+                        'h-4 px-1 text-[10px] tabular-nums',
+                        PRIORITY_TONE[p],
+                      )}
                     >
                       {p.toUpperCase()}
                     </Badge>
@@ -189,7 +195,11 @@ export function AttributePanel({ issue }: AttributePanelProps) {
           </Select>
         </SideCard>
 
-        <LabelsCard issue={issue} allLabels={labels ?? []} onSave={(ids) => patch({ label_ids: ids })} />
+        <LabelsCard
+          issue={issue}
+          allLabels={labels ?? []}
+          onSave={(ids) => patch({ label_ids: ids })}
+        />
 
         <DueDateCard
           value={issue.due_date}
@@ -233,7 +243,9 @@ function LabelsCard({ issue, allLabels, onSave }: LabelsCardProps) {
 
   const toggle = (id: string) => {
     const base = pendingIds ?? currentIds
-    const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id]
+    const next = base.includes(id)
+      ? base.filter((x) => x !== id)
+      : [...base, id]
     setPendingIds(next)
   }
 
@@ -257,7 +269,11 @@ function LabelsCard({ issue, allLabels, onSave }: LabelsCardProps) {
       action={
         <Popover open={open} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-1.5 text-xs text-muted-foreground"
+            >
               + 添加
             </Button>
           </PopoverTrigger>

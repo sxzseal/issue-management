@@ -14,10 +14,16 @@ export function mountApiRoutes(): Hono<{ Bindings: Env }> {
   const api = new Hono<{ Bindings: Env }>()
 
   api.get('/ping', (c) =>
-    c.json({ status_code: 0, data: { pong: true, ts: new Date().toISOString() } }),
+    c.json({
+      status_code: 0,
+      data: { pong: true, ts: new Date().toISOString() },
+    }),
   )
   api.get('/health', (c) =>
-    c.json({ status_code: 0, data: { ok: true, ts: new Date().toISOString() } }),
+    c.json({
+      status_code: 0,
+      data: { ok: true, ts: new Date().toISOString() },
+    }),
   )
 
   api.route('/auth', authRoutes)

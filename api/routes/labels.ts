@@ -68,7 +68,11 @@ app.post('/', async (c) => {
   const parsed = createLabelBodySchema.safeParse(rawBody)
   if (!parsed.success) {
     const first = parsed.error.issues[0]
-    return err(c, ErrorCodes.VALIDATION_FAILED, first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const body = parsed.data
 
@@ -127,7 +131,11 @@ app.patch('/:id', async (c) => {
   const parsed = updateLabelBodySchema.safeParse(rawBody)
   if (!parsed.success) {
     const first = parsed.error.issues[0]
-    return err(c, ErrorCodes.VALIDATION_FAILED, first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED])
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      first?.message ?? ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
   }
   const body = parsed.data
 
@@ -180,7 +188,11 @@ app.patch('/:id', async (c) => {
     .bind(id)
     .first<LabelRow>()
   if (!updated) {
-    return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+    return err(
+      c,
+      ErrorCodes.INTERNAL_ERROR,
+      ErrorMessages[ErrorCodes.INTERNAL_ERROR],
+    )
   }
   return ok(c, rowToLabel(updated))
 })

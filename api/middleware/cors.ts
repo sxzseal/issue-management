@@ -11,11 +11,7 @@ import type { Env } from '../index'
 
 const ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 
-const ALLOWED_HEADERS = [
-  'Content-Type',
-  'Authorization',
-  'X-Request-Id',
-]
+const ALLOWED_HEADERS = ['Content-Type', 'Authorization', 'X-Request-Id']
 
 const EXPOSE_HEADERS = ['X-Request-Id']
 

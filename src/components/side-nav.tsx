@@ -36,7 +36,7 @@ function NavItem({ to, icon: Icon, end, children }: NavItemProps) {
             'flex items-center gap-2 rounded px-3 py-2 text-sm text-foreground transition-colors',
             'hover:bg-accent hover:text-accent-foreground',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            isActive && 'bg-accent font-medium text-accent-foreground'
+            isActive && 'bg-accent font-medium text-accent-foreground',
           )
         }
       >
@@ -69,7 +69,7 @@ function ColoredNavRow({ to, color, name, isActive }: ColoredNavRowProps) {
           'flex items-center gap-2 rounded px-3 py-1.5 text-sm text-foreground transition-colors',
           'hover:bg-accent hover:text-accent-foreground',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          isActive && 'bg-accent font-medium text-accent-foreground'
+          isActive && 'bg-accent font-medium text-accent-foreground',
         )}
       >
         <span
@@ -126,7 +126,7 @@ export function SideNav() {
             className={cn(
               'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground transition-colors',
               'hover:bg-accent hover:text-accent-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             )}
             aria-label="管理项目"
           >
@@ -155,7 +155,10 @@ export function SideNav() {
           </ul>
         )}
       </div>
-      <ProjectManageDialog open={projectManageOpen} onOpenChange={setProjectManageOpen} />
+      <ProjectManageDialog
+        open={projectManageOpen}
+        onOpenChange={setProjectManageOpen}
+      />
     </nav>
   )
 }

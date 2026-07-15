@@ -14,7 +14,7 @@ export class RequestError extends Error {
   constructor(
     public readonly statusCode: number,
     message: string,
-    public readonly httpStatus: number
+    public readonly httpStatus: number,
   ) {
     super(message)
     this.name = 'RequestError'
@@ -63,8 +63,16 @@ export function configureRequest(config: {
   if (config.onUnauthorized) onUnauthorized = config.onUnauthorized
 }
 
-function buildURL(path: string, query?: RequestOptions['query'], baseURL?: string): string {
-  const base = baseURL ?? (typeof window === 'undefined' ? 'http://localhost' : window.location.origin)
+function buildURL(
+  path: string,
+  query?: RequestOptions['query'],
+  baseURL?: string,
+): string {
+  const base =
+    baseURL ??
+    (typeof window === 'undefined'
+      ? 'http://localhost'
+      : window.location.origin)
   const url = new URL(path, base)
   if (query) {
     for (const [key, value] of Object.entries(query)) {
@@ -79,18 +87,29 @@ function buildURL(path: string, query?: RequestOptions['query'], baseURL?: strin
   return url.pathname + url.search
 }
 
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+export async function request<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const { query, body, baseURL, headers, ...rest } = options
   const mergedHeaders: Record<string, string> = {
     ...(headers as Record<string, string> | undefined),
   }
   // Only send Content-Type on bodies — bodyless requests can stay CORS-safe
   // (avoids a preflight against the vite proxy in dev).
-  if (body !== undefined && !('Content-Type' in mergedHeaders) && !('content-type' in mergedHeaders)) {
+  if (
+    body !== undefined &&
+    !('Content-Type' in mergedHeaders) &&
+    !('content-type' in mergedHeaders)
+  ) {
     mergedHeaders['Content-Type'] = 'application/json'
   }
   const token = tokenProvider?.()
-  if (token && !('Authorization' in mergedHeaders) && !('authorization' in mergedHeaders)) {
+  if (
+    token &&
+    !('Authorization' in mergedHeaders) &&
+    !('authorization' in mergedHeaders)
+  ) {
     mergedHeaders.Authorization = `Bearer ${token}`
   }
   const init: RequestInit = {
@@ -114,7 +133,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const parsed = (await response.json()) as ApiResponse<T>
   if (parsed.status_code !== 0) {
-    throw new RequestError(parsed.status_code, parsed.message ?? 'Request failed', response.status)
+    throw new RequestError(
+      parsed.status_code,
+      parsed.message ?? 'Request failed',
+      response.status,
+    )
   }
   return parsed.data as T
 }

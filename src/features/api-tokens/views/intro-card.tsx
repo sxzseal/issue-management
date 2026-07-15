@@ -31,7 +31,8 @@ export function IntroCard() {
           <div className="min-w-0 flex-1">
             <CardTitle className="text-base">API Token</CardTitle>
             <CardDescription className="mt-1">
-              让 Claude Code / 脚本 / AI Agent 以 Bearer Token 调用完整 REST API —— 创建、修改、评论、改状态、查询皆可
+              让 Claude Code / 脚本 / AI Agent 以 Bearer Token 调用完整 REST API
+              —— 创建、修改、评论、改状态、查询皆可
             </CardDescription>
           </div>
           <button

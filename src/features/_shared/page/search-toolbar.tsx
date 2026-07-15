@@ -31,7 +31,7 @@ export function SearchToolbar({
     <div
       className={cn(
         'flex flex-none flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-3',
-        className
+        className,
       )}
     >
       <div className="relative min-w-0 flex-1 md:max-w-md">
@@ -52,8 +52,12 @@ export function SearchToolbar({
           清除全部
         </Button>
       ) : null}
-      {filters ? <div className="flex flex-wrap items-center gap-2">{filters}</div> : null}
-      {actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
+      {filters ? (
+        <div className="flex flex-wrap items-center gap-2">{filters}</div>
+      ) : null}
+      {actions ? (
+        <div className="ml-auto flex items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   )
 }

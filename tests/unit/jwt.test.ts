@@ -6,8 +6,18 @@
  * KV blacklist rejection; KV.get throw → authenticate rejects (fail-closed).
  */
 import { describe, it, expect } from 'vitest'
-import { signJwt, verifyJwt, randomJti, JwtError, type JwtClaims } from '../../api/lib/jwt'
-import { authenticate, AuthError, JWT_BLACKLIST_PREFIX } from '../../api/lib/auth'
+import {
+  signJwt,
+  verifyJwt,
+  randomJti,
+  JwtError,
+  type JwtClaims,
+} from '../../api/lib/jwt'
+import {
+  authenticate,
+  AuthError,
+  JWT_BLACKLIST_PREFIX,
+} from '../../api/lib/auth'
 
 const SECRET = 'test-jwt-secret-xxxxxxx'
 
@@ -21,7 +31,10 @@ function claims(overrides: Partial<JwtClaims> = {}): JwtClaims {
 }
 
 // Minimal KV mock — only needs `get`/`put` used by authenticate/revoke.
-function makeKv(initial: Record<string, string> = {}, opts: { throwOnGet?: boolean } = {}) {
+function makeKv(
+  initial: Record<string, string> = {},
+  opts: { throwOnGet?: boolean } = {},
+) {
   const store = new Map<string, string>(Object.entries(initial))
   return {
     get: async (key: string) => {
@@ -39,7 +52,8 @@ function makeCtx(token: string | null, kv: ReturnType<typeof makeKv>) {
   return {
     req: {
       header: (name: string) => {
-        if (name.toLowerCase() === 'authorization' && token) return `Bearer ${token}`
+        if (name.toLowerCase() === 'authorization' && token)
+          return `Bearer ${token}`
         return undefined
       },
     },
@@ -58,12 +72,16 @@ describe('jwt.signJwt / verifyJwt', () => {
 
   it('rejects a token whose exp is in the past', async () => {
     const token = await signJwt(SECRET, claims({ exp: nowSec() - 1 }))
-    await expect(verifyJwt(SECRET, token)).rejects.toMatchObject({ reason: 'expired' })
+    await expect(verifyJwt(SECRET, token)).rejects.toMatchObject({
+      reason: 'expired',
+    })
   })
 
   it('rejects a token whose exp equals now (exp <= now)', async () => {
     const token = await signJwt(SECRET, claims({ exp: nowSec() }))
-    await expect(verifyJwt(SECRET, token)).rejects.toMatchObject({ reason: 'expired' })
+    await expect(verifyJwt(SECRET, token)).rejects.toMatchObject({
+      reason: 'expired',
+    })
   })
 
   it('accepts a token with exp comfortably in the future', async () => {
@@ -75,7 +93,10 @@ describe('jwt.signJwt / verifyJwt', () => {
     const token = await signJwt(SECRET, claims())
     // Swap the payload segment for a longer-lifetime claim.
     const forged = JSON.stringify({ ...claims({ exp: nowSec() + 999999 }) })
-    const b64 = btoa(forged).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+    const b64 = btoa(forged)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '')
     const [h, , s] = token.split('.')
     await expect(verifyJwt(SECRET, `${h}.${b64}.${s}`)).rejects.toMatchObject({
       reason: 'signature',
@@ -87,7 +108,9 @@ describe('jwt.signJwt / verifyJwt', () => {
     const [h, p, s] = token.split('.')
     // Flip one hex byte in the sig.
     const bad = s.slice(0, -2) + (s.endsWith('AA') ? 'BB' : 'AA')
-    await expect(verifyJwt(SECRET, `${h}.${p}.${bad}`)).rejects.toBeInstanceOf(JwtError)
+    await expect(verifyJwt(SECRET, `${h}.${p}.${bad}`)).rejects.toBeInstanceOf(
+      JwtError,
+    )
   })
 
   it('rejects a token with alg: none (algorithm downgrade)', async () => {
@@ -100,7 +123,9 @@ describe('jwt.signJwt / verifyJwt', () => {
       .replace(/\//g, '_')
       .replace(/=+$/g, '')
     // Empty signature — classic 'none' attack.
-    await expect(verifyJwt(SECRET, `${header}.${payload}.`)).rejects.toMatchObject({
+    await expect(
+      verifyJwt(SECRET, `${header}.${payload}.`),
+    ).rejects.toMatchObject({
       reason: 'unsupported',
     })
   })
@@ -114,13 +139,15 @@ describe('jwt.signJwt / verifyJwt', () => {
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/g, '')
-    await expect(verifyJwt(SECRET, `${header}.${payload}.deadbeef`)).rejects.toMatchObject(
-      { reason: 'unsupported' },
-    )
+    await expect(
+      verifyJwt(SECRET, `${header}.${payload}.deadbeef`),
+    ).rejects.toMatchObject({ reason: 'unsupported' })
   })
 
   it('rejects malformed tokens (wrong segment count, non-base64)', async () => {
-    await expect(verifyJwt(SECRET, 'a.b')).rejects.toMatchObject({ reason: 'malformed' })
+    await expect(verifyJwt(SECRET, 'a.b')).rejects.toMatchObject({
+      reason: 'malformed',
+    })
     await expect(verifyJwt(SECRET, 'onlyonepart')).rejects.toMatchObject({
       reason: 'malformed',
     })
@@ -178,6 +205,8 @@ describe('auth.authenticate (KV blacklist)', () => {
     await expect(authenticate(makeCtx(token, kv))).rejects.toThrow()
     // And specifically NOT an AuthError — because it's an infra fault, not a
     // credential fault. The caller must decide whether to map to 401 or 5xx.
-    await expect(authenticate(makeCtx(token, kv))).rejects.not.toBeInstanceOf(AuthError)
+    await expect(authenticate(makeCtx(token, kv))).rejects.not.toBeInstanceOf(
+      AuthError,
+    )
   })
 })

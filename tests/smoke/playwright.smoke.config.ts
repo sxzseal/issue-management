@@ -12,10 +12,7 @@ export default defineConfig({
   testDir: '.',
   timeout: 30_000,
   retries: 1,
-  reporter: [
-    ['json', { outputFile: 'smoke-report.json' }],
-    ['list'],
-  ],
+  reporter: [['json', { outputFile: 'smoke-report.json' }], ['list']],
   use: {
     baseURL: process.env.SMOKE_BASE_URL || 'http://localhost:3000',
     trace: 'off',

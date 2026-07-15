@@ -89,16 +89,16 @@ function LoginCard({
     <div
       className={cn(
         'theme-issue-management',
-        'min-h-screen w-full grid place-items-center bg-muted/40 px-4 py-10',
+        'grid min-h-screen w-full place-items-center bg-muted/40 px-4 py-10',
       )}
     >
       <div className="w-full max-w-sm">
         <div className="rounded-lg border border-input bg-background shadow-sm">
-          <div className="flex flex-col items-center gap-3 px-6 pt-8 pb-2">
+          <div className="flex flex-col items-center gap-3 px-6 pb-2 pt-8">
             <div
               className={cn(
                 'flex h-12 w-12 items-center justify-center rounded-lg',
-                'bg-primary text-primary-foreground text-xl font-semibold shadow-sm',
+                'bg-primary text-xl font-semibold text-primary-foreground shadow-sm',
               )}
               aria-hidden
             >
@@ -149,7 +149,7 @@ function LoginCard({
                               'inline-flex h-7 w-7 items-center justify-center rounded-md',
                               'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                              'disabled:opacity-50 disabled:pointer-events-none',
+                              'disabled:pointer-events-none disabled:opacity-50',
                             )}
                             disabled={disabled}
                             tabIndex={-1}
@@ -168,10 +168,7 @@ function LoginCard({
                 />
 
                 {rateLimited ? (
-                  <p
-                    role="alert"
-                    className="text-sm text-destructive"
-                  >
+                  <p role="alert" className="text-sm text-destructive">
                     {LOGIN_MESSAGES.frozen}
                     <span className="ml-1 text-muted-foreground">
                       {LOGIN_MESSAGES.countdown(countdownLabel)}
@@ -179,11 +176,7 @@ function LoginCard({
                   </p>
                 ) : null}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={disabled}
-                >
+                <Button type="submit" className="w-full" disabled={disabled}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

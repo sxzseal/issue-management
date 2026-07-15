@@ -44,10 +44,18 @@ export function errorHandler(): MiddlewareHandler<{
       )
 
       if (e instanceof AuthError) {
-        return err(c, ErrorCodes.UNAUTHORIZED, ErrorMessages[ErrorCodes.UNAUTHORIZED])
+        return err(
+          c,
+          ErrorCodes.UNAUTHORIZED,
+          ErrorMessages[ErrorCodes.UNAUTHORIZED],
+        )
       }
 
-      return err(c, ErrorCodes.INTERNAL_ERROR, ErrorMessages[ErrorCodes.INTERNAL_ERROR])
+      return err(
+        c,
+        ErrorCodes.INTERNAL_ERROR,
+        ErrorMessages[ErrorCodes.INTERNAL_ERROR],
+      )
     }
   }
 }

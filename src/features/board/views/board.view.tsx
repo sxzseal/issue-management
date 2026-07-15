@@ -29,10 +29,14 @@ interface StatusSheetState {
 }
 
 export function BoardView() {
-  const { data, isPending, isError, refetch } = useQuery(boardQueries.overview())
+  const { data, isPending, isError, refetch } = useQuery(
+    boardQueries.overview(),
+  )
   const [searchParams, setSearchParams] = useSearchParams()
   const [creating, setCreating] = useState<CreatingState>({ open: false })
-  const [statusSheet, setStatusSheet] = useState<StatusSheetState>({ open: false })
+  const [statusSheet, setStatusSheet] = useState<StatusSheetState>({
+    open: false,
+  })
 
   useEffect(() => {
     if (searchParams.get('new') === '1') {
@@ -50,7 +54,8 @@ export function BoardView() {
       const target = event.target as HTMLElement | null
       if (
         target &&
-        (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.isContentEditable)
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+          target.isContentEditable)
       ) {
         return
       }
@@ -78,7 +83,7 @@ export function BoardView() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <header className="flex flex-none items-center justify-between border-b border-border px-6 py-3">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">issue总览</h1>
@@ -95,25 +100,25 @@ export function BoardView() {
       </header>
 
       {isPending ? (
-        <div className="flex-1 min-h-0">
+        <div className="min-h-0 flex-1">
           <Loading />
         </div>
       ) : isError ? (
-        <div className="flex-1 min-h-0">
+        <div className="min-h-0 flex-1">
           <ErrorState onRetry={() => void refetch()} />
         </div>
       ) : (
         <div
           className={
-            'flex-1 min-h-0 overflow-x-auto overflow-y-hidden ' +
-            'flex snap-x snap-mandatory gap-4 p-4 ' +
-            'md:grid md:grid-cols-4 md:gap-4 md:overflow-x-hidden md:overflow-y-hidden md:p-6 md:snap-none'
+            'min-h-0 flex-1 overflow-x-auto overflow-y-hidden ' +
+            'flex snap-x snap-mandatory gap-4 p-4' +
+            'md:grid md:snap-none md:grid-cols-4 md:gap-4 md:overflow-x-hidden md:overflow-y-hidden md:p-6'
           }
         >
           {data.columns.map((column) => (
             <div
               key={column.status}
-              className="flex min-w-[280px] flex-1 snap-start flex-col min-h-0 md:min-w-0"
+              className="flex min-h-0 min-w-[280px] flex-1 snap-start flex-col md:min-w-0"
             >
               <BoardColumn
                 column={column}

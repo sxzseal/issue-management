@@ -82,7 +82,7 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
   return (
     <div
       className={cn(
-        'group relative flex cursor-pointer flex-col gap-2 rounded-md border border-border bg-background p-3 min-w-0',
+        'group relative flex min-w-0 cursor-pointer flex-col gap-2 rounded-md border border-border bg-background p-3',
         'transition-colors duration-200 ease-out hover:bg-accent/50',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
       )}
@@ -113,13 +113,14 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
               </span>
             </TooltipTrigger>
             <TooltipContent side="left" className="text-xs">
-              来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
+              来源：API Token
+              {issue.source_name ? ` · ${issue.source_name}` : ''}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ) : null}
 
-      <div className="flex items-start justify-between gap-2 min-w-0">
+      <div className="flex min-w-0 items-start justify-between gap-2">
         <button
           type="button"
           onClick={(e) => {
@@ -127,7 +128,7 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
             onOpenStatus(issue)
           }}
           className={cn(
-            'inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 text-[10px] font-mono font-semibold tabular-nums',
+            'inline-flex h-5 shrink-0 items-center rounded-full border px-1.5 font-mono text-[10px] font-semibold tabular-nums',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             PRIORITY_CHIP_CLASS[issue.priority],
           )}
@@ -138,12 +139,12 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         </button>
       </div>
 
-      <div className="text-left text-sm font-medium leading-snug line-clamp-2 break-words">
+      <div className="line-clamp-2 break-words text-left text-sm font-medium leading-snug">
         {issue.title}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-        <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground min-w-0 max-w-[8rem]">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className="inline-flex min-w-0 max-w-[8rem] items-center gap-1 text-[11px] text-muted-foreground">
           <span
             aria-hidden
             className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40"
@@ -154,7 +155,7 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         {shownLabels.map((label) => (
           <span
             key={label.id}
-            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[10px] max-w-[6rem] text-foreground"
+            className="inline-flex max-w-[6rem] items-center gap-1 rounded-full border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[10px] text-foreground"
             title={label.name}
           >
             <span
@@ -166,16 +167,19 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
           </span>
         ))}
         {remaining > 0 ? (
-          <span className="text-[10px] text-muted-foreground">+{remaining}</span>
+          <span className="text-[10px] text-muted-foreground">
+            +{remaining}
+          </span>
         ) : null}
 
         {issue.due_date ? (
           <Badge
             variant="outline"
             className={cn(
-              'h-5 gap-1 px-1.5 text-[10px] tabular-nums font-normal',
+              'h-5 gap-1 px-1.5 text-[10px] font-normal tabular-nums',
               overdue && 'border-destructive/60 text-destructive',
-              isDueToday && 'border-[hsl(var(--feedback-warning)/0.6)] text-[hsl(var(--feedback-warning))]',
+              isDueToday &&
+                'border-[hsl(var(--feedback-warning)/0.6)] text-[hsl(var(--feedback-warning))]',
               !overdue && !isDueToday && 'text-muted-foreground',
             )}
           >
