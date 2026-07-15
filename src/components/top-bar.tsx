@@ -28,13 +28,13 @@ function useCurrentPageTitle(): string {
   const isBoard = useMatch('/board')
   const isList = useMatch('/list')
   const isIssue = useMatch('/issue/:id')
-  const isWebhook = useMatch('/settings/webhook')
+  const isApiTokens = useMatch('/settings/api-tokens')
   const params = useParams<{ id?: string }>()
 
   if (isBoard) return '看板'
   if (isList) return '列表'
   if (isIssue) return params.id ? `Issue #${params.id}` : 'Issue 详情'
-  if (isWebhook) return 'Webhook 设置'
+  if (isApiTokens) return 'API Token'
   return ''
 }
 

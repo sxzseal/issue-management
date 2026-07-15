@@ -11,7 +11,7 @@ import {
   LayoutGrid,
   List,
   BarChart3,
-  Webhook,
+  KeyRound,
   Plus,
   Search,
   Bell,
@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { MOCK_PROJECTS } from './domain'
 
-export type NavKey = 'board' | 'list' | 'stats' | 'webhook'
+export type NavKey = 'board' | 'list' | 'stats' | 'api-tokens'
 
 interface AppShellProps {
   children: ReactNode
@@ -47,7 +47,7 @@ const NAV_ITEMS: Array<{ key: NavKey; label: string; icon: typeof LayoutGrid; hr
   { key: 'board', label: '看板', icon: LayoutGrid, href: '/board' },
   { key: 'list', label: '列表', icon: List, href: '/list' },
   { key: 'stats', label: '统计', icon: BarChart3, href: '/stats' },
-  { key: 'webhook', label: 'Webhook', icon: Webhook, href: '/settings/webhook' },
+  { key: 'api-tokens', label: 'API Token', icon: KeyRound, href: '/settings/api-tokens' },
 ]
 
 function TopBar({
@@ -120,8 +120,8 @@ function TopBar({
               设置
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Webhook className="mr-2 h-4 w-4" />
-              Webhook 设置
+              <KeyRound className="mr-2 h-4 w-4" />
+              API Token
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive focus:text-destructive">

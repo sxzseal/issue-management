@@ -44,7 +44,7 @@ export const JWT_BLACKLIST_PREFIX = 'jwt:blacklist:'
  *  - `revoked`  — jti present in KV blacklist
  */
 export async function authenticate(c: EnvContext): Promise<JwtClaims> {
-  const header = c.req.header('Authorization') ?? c.req.header('authorization')
+  const header = c.req.header('Authorization')
   if (!header) {
     throw new AuthError('missing')
   }

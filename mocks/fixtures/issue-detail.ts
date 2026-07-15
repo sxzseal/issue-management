@@ -36,8 +36,8 @@ export const DETAIL_ISSUE: Issue & { body_full: string } = {
   priority: 'p0',
   label_ids: ['lbl_bug', 'lbl_refactor', 'lbl_debt'],
   due_date: '2026-07-20',
-  source: 'webhook',
-  webhook_ref: 'github:mlamp/ai-forge#pr-17',
+  source: 'api',
+  source_name: 'github:mlamp/ai-forge#pr-17',
   created_at: '2026-06-15T09:12:00Z',
   updated_at: '2026-07-13T09:45:00Z',
   body_full: `## 背景

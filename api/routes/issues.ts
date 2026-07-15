@@ -302,6 +302,12 @@ app.post('/', async (c) => {
   const id = newIssueId()
   const now = nowIso()
 
+  // Provenance: browser session → 'manual'; API token → 'api'. The badge on
+  // the board / list / detail views branches on this. authKind is set by
+  // authGuard; the fallback keeps this handler defensive if that changes.
+  const source: 'manual' | 'api' = c.get('authKind') === 'api-token' ? 'api' : 'manual'
+  const sourceName = source === 'api' ? c.get('authTokenId') ?? null : null
+
   // body overflow decision
   let insertBody: string | null = null
   let insertBodyR2Key: string | null = null
@@ -318,7 +324,7 @@ app.post('/', async (c) => {
     `INSERT INTO ${TABLES.issues}
       (id, project_id, title, body, body_r2_key, status, priority, due_date,
        external_ref, source, source_name, created_at, updated_at, archived_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 'manual', NULL, ?, ?, NULL)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, NULL)`,
   )
     .bind(
       id,
@@ -329,6 +335,8 @@ app.post('/', async (c) => {
       data.status,
       data.priority,
       data.due_date ?? null,
+      source,
+      sourceName,
       now,
       now,
     )
@@ -357,8 +365,8 @@ app.post('/', async (c) => {
     priority: data.priority,
     due_date: data.due_date ?? null,
     external_ref: null,
-    source: 'manual',
-    source_name: null,
+    source,
+    source_name: sourceName,
     labels,
     created_at: now,
     updated_at: now,

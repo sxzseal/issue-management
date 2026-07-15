@@ -13,7 +13,7 @@ import { Toaster, toast } from 'sonner'
 import {
   Plus,
   MoreHorizontal,
-  Webhook as WebhookIcon,
+  KeyRound as KeyRoundIcon,
   Calendar as CalendarIcon,
   Archive,
 } from 'lucide-react'
@@ -144,19 +144,19 @@ function IssueCard({ issue }: IssueCardProps) {
         </Badge>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
-          {issue.source === 'webhook' ? (
+          {issue.source === 'api' ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span
                     className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground"
-                    aria-label="来自 webhook"
+                    aria-label="通过 API Token 创建"
                   >
-                    <WebhookIcon className="h-3.5 w-3.5" />
+                    <KeyRoundIcon className="h-3.5 w-3.5" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  来源：{issue.webhook_ref ?? 'webhook'}
+                  来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

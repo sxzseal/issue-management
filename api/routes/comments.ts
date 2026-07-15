@@ -13,7 +13,7 @@
  */
 import { Hono } from 'hono'
 import type { Env } from '../index'
-import { authGuard } from '../middleware/auth-guard'
+import { authGuard, type AuthGuardVariables } from '../middleware/auth-guard'
 import { ok, err, noContent } from '../lib/response'
 import { ErrorCodes, ErrorMessages } from '../../src/lib/error-codes'
 import type { CommentRow } from '../db/types'
@@ -23,7 +23,7 @@ import {
   listCommentsQuerySchema,
 } from '../../src/lib/validators/comment'
 
-const app = new Hono<{ Bindings: Env; Variables: { authJti: string } }>()
+const app = new Hono<{ Bindings: Env; Variables: AuthGuardVariables }>()
 
 app.use('*', authGuard())
 

@@ -7,11 +7,11 @@ import { NavLink, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   Inbox,
+  KeyRound,
   LayoutGrid,
   ListOrdered,
   Loader2,
   Settings2,
-  Webhook,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -111,8 +111,8 @@ export function SideNav() {
           <NavItem to="/list" icon={ListOrdered}>
             列表
           </NavItem>
-          <NavItem to="/settings/webhook" icon={Webhook}>
-            Webhook
+          <NavItem to="/settings/api-tokens" icon={KeyRound}>
+            API Token
           </NavItem>
         </ul>
         <div className="mt-4 flex items-center justify-between px-3 pb-2 pt-3">

@@ -12,7 +12,6 @@ export type Env = {
   R2: R2Bucket
   KV: KVNamespace
   JWT_SECRET: string
-  WEBHOOK_SECRET: string
   APP_URL: string
   APP_PASSWORD: string
   CORS_EXTRA_ORIGINS?: string

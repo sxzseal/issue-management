@@ -14,9 +14,6 @@ const ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
 const ALLOWED_HEADERS = [
   'Content-Type',
   'Authorization',
-  'X-Webhook-Signature',
-  'X-Webhook-Source',
-  'X-Webhook-Event-Id',
   'X-Request-Id',
 ]
 

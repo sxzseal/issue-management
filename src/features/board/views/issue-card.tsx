@@ -4,7 +4,7 @@
  * /issue/:id; the priority chip stops propagation so its click doesn't navigate.
  */
 import { useNavigate } from 'react-router'
-import { Calendar, Webhook } from 'lucide-react'
+import { Calendar, KeyRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Tooltip,
@@ -97,7 +97,7 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         }
       }}
     >
-      {issue.source === 'webhook' ? (
+      {issue.source === 'api' ? (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -107,13 +107,13 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
                   'rounded-full bg-primary text-primary-foreground shadow-sm',
                   'ring-2 ring-background',
                 )}
-                aria-label={`来自 webhook：${issue.source_name ?? 'webhook'}`}
+                aria-label={`通过 API Token 创建：${issue.source_name ?? 'API'}`}
               >
-                <Webhook className="h-3 w-3" />
+                <KeyRound className="h-3 w-3" />
               </span>
             </TooltipTrigger>
             <TooltipContent side="left" className="text-xs">
-              来源：{issue.source_name ?? 'webhook'}
+              来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

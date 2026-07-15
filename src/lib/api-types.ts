@@ -11,7 +11,7 @@
 
 export type IssueStatus = 'todo' | 'in_progress' | 'done' | 'archived'
 export type IssuePriority = 'p0' | 'p1' | 'p2' | 'p3'
-export type IssueSource = 'manual' | 'webhook'
+export type IssueSource = 'manual' | 'api'
 
 export interface Project {
   id: string
@@ -67,15 +67,26 @@ export interface Comment {
   created_at: string
 }
 
-export interface WebhookLog {
+/**
+ * API token — long-lived bearer credential for external AI / script clients.
+ * `revoked_at` is null while active; soft-delete keeps a paper trail so past
+ * `last_used_at` and provenance stay visible in the settings UI.
+ */
+export interface ApiToken {
   id: string
-  source: string
-  event_id: string
-  event_type: string
-  http_status: number
-  error_summary: string | null
-  issue_id: string | null
-  received_at: string
+  name: string
+  prefix: string
+  created_at: string
+  last_used_at: string | null
+  revoked_at: string | null
+}
+
+/**
+ * Response of `POST /api/settings/api-tokens` — includes the raw `token`
+ * exactly once. Subsequent list reads return {@link ApiToken} (no raw).
+ */
+export interface CreatedApiToken extends ApiToken {
+  token: string
 }
 
 export interface PaginationParams {

@@ -10,7 +10,7 @@ export const TABLES = {
   issues: 'issues',
   issueLabels: 'issue_labels',
   comments: 'comments',
-  webhookLogs: 'webhook_logs',
+  apiTokens: 'api_tokens',
 } as const
 
 export type TableName = (typeof TABLES)[keyof typeof TABLES]

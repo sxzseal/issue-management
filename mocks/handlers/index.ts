@@ -10,12 +10,10 @@ import { authHandlers } from './auth'
 import { boardHandlers } from './board'
 import { listHandlers } from './list'
 import { issueDetailHandlers } from './issue-detail'
-import { webhookSettingsHandlers } from './webhook-settings'
 
 export const handlers: HttpHandler[] = [
   ...authHandlers,
   ...boardHandlers,
   ...listHandlers,
   ...issueDetailHandlers,
-  ...webhookSettingsHandlers,
 ]

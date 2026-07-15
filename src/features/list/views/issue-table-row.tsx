@@ -5,7 +5,7 @@
  * inline dialog confirms before firing the mutation.
  */
 import { memo, useMemo, useState, type MouseEvent, type KeyboardEvent } from 'react'
-import { Trash2, Webhook as WebhookIcon } from 'lucide-react'
+import { Trash2, KeyRound } from 'lucide-react'
 import type { Issue, Label } from '@/lib/api-types'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -124,7 +124,7 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
       >
         <TableCell className="min-w-0">
           <div className="flex items-start gap-2 min-w-0">
-            {issue.source === 'webhook' && (
+            {issue.source === 'api' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -134,13 +134,13 @@ export const IssueTableRow = memo(function IssueTableRow({ issue, onActivate }: 
                         'rounded-full bg-primary text-primary-foreground shadow-sm',
                         'ring-2 ring-background',
                       )}
-                      aria-label={`来自 webhook：${issue.source_name ?? 'webhook'}`}
+                      aria-label={`通过 API Token 创建：${issue.source_name ?? 'API'}`}
                     >
-                      <WebhookIcon className="h-3 w-3" />
+                      <KeyRound className="h-3 w-3" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    来源：{issue.source_name ?? 'webhook'}
+                    来源：API Token{issue.source_name ? ` · ${issue.source_name}` : ''}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

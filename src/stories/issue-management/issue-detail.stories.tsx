@@ -13,7 +13,7 @@ import {
   Pencil,
   Send,
   Trash2,
-  Webhook,
+  KeyRound,
   X,
 } from 'lucide-react'
 
@@ -257,7 +257,7 @@ function EditableTitle({ value }: EditableTitleProps) {
  * -------------------------------------------------------------------------- */
 
 function MetaRow({ issue }: { issue: Issue }) {
-  const SourceIcon = issue.source === 'webhook' ? Webhook : Globe
+  const SourceIcon = issue.source === 'api' ? KeyRound : Globe
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
       <span className="font-mono text-xs">#{issue.id}</span>
@@ -270,10 +270,10 @@ function MetaRow({ issue }: { issue: Issue }) {
         <SourceIcon className="h-3.5 w-3.5" />
         {SOURCE_LABEL[issue.source]}
       </span>
-      {issue.webhook_ref ? (
+      {issue.source_name ? (
         <>
           <span aria-hidden>·</span>
-          <span className="truncate font-mono text-xs">{issue.webhook_ref}</span>
+          <span className="truncate font-mono text-xs">{issue.source_name}</span>
         </>
       ) : null}
     </div>

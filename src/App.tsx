@@ -11,7 +11,7 @@ const IssueDetailRoute = lazy(() => import('./routes/issue-detail.route'))
 const ListRoute = lazy(() => import('./routes/list.route'))
 const LoginRoute = lazy(() => import('./routes/login.route'))
 const NotFoundRoute = lazy(() => import('./routes/not-found.route'))
-const WebhookSettingsRoute = lazy(() => import('./routes/webhook-settings.route'))
+const ApiTokensRoute = lazy(() => import('./routes/api-tokens.route'))
 
 /**
  * Layout route for all authenticated pages. Mounts the shell once and renders
@@ -42,7 +42,7 @@ export default function App() {
               <Route path="/board" element={<BoardRoute />} />
               <Route path="/list" element={<ListRoute />} />
               <Route path="/issue/:id" element={<IssueDetailRoute />} />
-              <Route path="/settings/webhook" element={<WebhookSettingsRoute />} />
+              <Route path="/settings/api-tokens" element={<ApiTokensRoute />} />
               <Route path="*" element={<NotFoundRoute />} />
             </Route>
           </Routes>

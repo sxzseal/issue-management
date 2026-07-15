@@ -25,7 +25,7 @@ import {
   MoreHorizontal,
   Search,
   X,
-  Webhook as WebhookIcon,
+  KeyRound as KeyRoundIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -626,10 +626,10 @@ function IssueTable({
             <TableRow key={issue.id} className="group">
               <TableCell className="min-w-0">
                 <div className="flex items-start gap-2 min-w-0">
-                  {issue.source === 'webhook' ? (
-                    <WebhookIcon
+                  {issue.source === 'api' ? (
+                    <KeyRoundIcon
                       className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground"
-                      aria-label="webhook 来源"
+                      aria-label="API Token 来源"
                     />
                   ) : null}
                   <div className="min-w-0 flex-1">
@@ -671,8 +671,8 @@ function IssueTable({
         {rows.map((issue) => (
           <li key={issue.id} className="px-3 py-3 flex flex-col gap-1.5 group">
             <div className="flex items-start gap-2 min-w-0">
-              {issue.source === 'webhook' ? (
-                <WebhookIcon className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground" />
+              {issue.source === 'api' ? (
+                <KeyRoundIcon className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground" />
               ) : null}
               <p className="flex-1 min-w-0 text-sm font-medium line-clamp-2">
                 {issue.title}

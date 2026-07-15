@@ -22,7 +22,7 @@ const LOGIN_FAIL_LIMIT = 5
 const LOGIN_FREEZE_SEC = 15 * 60
 const JWT_TTL_SEC = 30 * 24 * 3600
 
-const app = new Hono<{ Bindings: Env; Variables: { authJti: string } }>()
+const app = new Hono<{ Bindings: Env }>()
 
 /**
  * Constant-time equality over UTF-8 encoded strings. Returns false immediately

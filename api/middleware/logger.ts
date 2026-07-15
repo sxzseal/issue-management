@@ -6,7 +6,7 @@
  * exposes it back to the client via the same response header, and stashes it
  * at `c.get('requestId')` for downstream middleware / handlers.
  *
- * Sensitive headers (Authorization, X-Webhook-Signature) are never logged.
+ * Sensitive headers (Authorization) are never logged.
  * Request/response bodies are never logged.
  */
 import type { MiddlewareHandler } from 'hono'
@@ -61,7 +61,7 @@ export interface RequestLoggerVariables {
  * Structured request logger.
  * - Adds `X-Request-Id` to the response (uses upstream value if present, else generates a UUIDv4-like id via crypto.randomUUID()).
  * - Logs one JSON line to console.log at request completion: { level, ts, method, path, status, durationMs, requestId, ip }.
- * - Sensitive headers (Authorization, X-Webhook-Signature) are never logged.
+ * - Sensitive headers (Authorization) are never logged.
  * - Level defaults to 'info'; skipped when env.LOG_LEVEL === 'error' unless the response is 5xx.
  */
 export function requestLogger(): MiddlewareHandler<{

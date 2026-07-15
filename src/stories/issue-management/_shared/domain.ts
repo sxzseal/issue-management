@@ -7,7 +7,7 @@
 
 export type IssueStatus = 'todo' | 'in_progress' | 'done' | 'archived'
 export type IssuePriority = 'p0' | 'p1' | 'p2' | 'p3'
-export type IssueSource = 'web' | 'webhook'
+export type IssueSource = 'web' | 'api'
 
 export interface Project {
   id: string
@@ -36,7 +36,8 @@ export interface Issue {
   label_ids: string[]
   due_date: string | null
   source: IssueSource
-  webhook_ref: string | null
+  /** Human label for the API token that created this issue (null for `web`). */
+  source_name: string | null
   created_at: string
   updated_at: string
 }
@@ -71,7 +72,7 @@ export const PRIORITY_SHORT: Record<IssuePriority, string> = {
 
 export const SOURCE_LABEL: Record<IssueSource, string> = {
   web: '手动',
-  webhook: 'Webhook',
+  api: 'API Token',
 }
 
 export const STATUS_ORDER: IssueStatus[] = ['todo', 'in_progress', 'done', 'archived']

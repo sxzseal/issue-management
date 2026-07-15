@@ -19,7 +19,7 @@
  */
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
-import { Clock, Globe, Webhook } from 'lucide-react'
+import { Clock, Globe, KeyRound } from 'lucide-react'
 
 import { ErrorState, SkeletonList } from '@/features/_shared/state'
 import { Separator } from '@/components/ui/separator'
@@ -56,7 +56,7 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 function MetaRow({ issue }: { issue: IssueDetail }) {
-  const SourceIcon = issue.source === 'webhook' ? Webhook : Globe
+  const SourceIcon = issue.source === 'api' ? KeyRound : Globe
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
       <span className="font-mono text-xs">#{issue.id}</span>
@@ -70,7 +70,11 @@ function MetaRow({ issue }: { issue: IssueDetail }) {
       <span aria-hidden>·</span>
       <span className="inline-flex items-center gap-1">
         <SourceIcon className="h-3.5 w-3.5" />
-        {issue.source === 'webhook' ? issue.source_name ?? 'webhook' : '手动'}
+        {issue.source === 'api'
+          ? issue.source_name
+            ? `API Token · ${issue.source_name}`
+            : 'API Token'
+          : '手动'}
       </span>
       {issue.external_ref ? (
         <>

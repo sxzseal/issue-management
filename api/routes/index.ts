@@ -8,8 +8,7 @@ import projectRoutes from './projects'
 import labelRoutes from './labels'
 import issueRoutes from './issues'
 import commentRoutes from './comments'
-import webhookIngestRoutes from './webhook-ingest'
-import webhookSettingsRoutes from './webhook-settings'
+import apiTokenRoutes from './api-tokens'
 
 export function mountApiRoutes(): Hono<{ Bindings: Env }> {
   const api = new Hono<{ Bindings: Env }>()
@@ -26,8 +25,7 @@ export function mountApiRoutes(): Hono<{ Bindings: Env }> {
   api.route('/labels', labelRoutes)
   api.route('/issues', issueRoutes)
   api.route('/', commentRoutes)
-  api.route('/', webhookIngestRoutes)
-  api.route('/settings/webhooks', webhookSettingsRoutes)
+  api.route('/settings/api-tokens', apiTokenRoutes)
 
   return api
 }

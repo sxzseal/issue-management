@@ -72,7 +72,7 @@ export const boardHandlers = [
           label_ids: body.label_ids ?? [],
           due_date: body.due_date ?? null,
           source: 'web',
-          webhook_ref: null,
+          source_name: null,
           created_at: '2026-07-13T10:30:00Z',
           updated_at: '2026-07-13T10:30:00Z',
         },

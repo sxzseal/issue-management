@@ -8,7 +8,6 @@ export const ErrorCodes = {
   MISSING_FIELD: 40001,            // 缺参 / 请求体字段缺失
   UNAUTHORIZED: 40101,             // 未认证 / token 无效 / 密码错误
   FORBIDDEN: 40301,                // 无权限（一般不用于个人产品）
-  WEBHOOK_SIGNATURE_INVALID: 40302,// HMAC 签名失败或缺失
   NOT_FOUND: 40401,                // 资源不存在
   NAME_CONFLICT: 40901,            // 唯一约束（重名 / external_ref 冲突）
   CONSTRAINT_CONFLICT: 40902,      // 关联删除阻塞（项目下有 issue）
@@ -24,7 +23,6 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.MISSING_FIELD]: '缺少必要字段',
   [ErrorCodes.UNAUTHORIZED]: '未授权',
   [ErrorCodes.FORBIDDEN]: '无权限',
-  [ErrorCodes.WEBHOOK_SIGNATURE_INVALID]: 'Webhook 签名校验失败',
   [ErrorCodes.NOT_FOUND]: '资源不存在',
   [ErrorCodes.NAME_CONFLICT]: '名称已存在',
   [ErrorCodes.CONSTRAINT_CONFLICT]: '存在关联数据，无法删除',

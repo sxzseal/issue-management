@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------------------
 export type IssueStatus = 'todo' | 'in_progress' | 'done' | 'archived'
 export type IssuePriority = 'p0' | 'p1' | 'p2' | 'p3'
-export type IssueSource = 'manual' | 'webhook'
+export type IssueSource = 'manual' | 'api'
 
 /** SQLite boolean stored as 0 or 1. */
 export type SqliteBool = 0 | 1
@@ -78,16 +78,14 @@ export interface CommentRow {
 }
 
 // -----------------------------------------------------------------------------
-// webhook_logs
+// api_tokens
 // -----------------------------------------------------------------------------
-export interface WebhookLogRow {
+export interface ApiTokenRow {
   id: string
-  source: string
-  event_id: string
-  event_type: string
-  payload: string
-  http_status: number
-  error_summary: string | null
-  issue_id: string | null
-  received_at: string
+  name: string
+  token_hash: string
+  prefix: string
+  created_at: string
+  last_used_at: string | null
+  revoked_at: string | null
 }

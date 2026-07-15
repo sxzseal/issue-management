@@ -1,9 +1,9 @@
 /**
- * IntroCard — /settings/webhook 页顶部信息卡（AC-071）
+ * IntroCard — /settings/api-tokens 顶部信息卡
  *
- * 「查看示例」按钮滚动到本页的 ExamplesCard；不再外链占位文档。
+ * 说明 API Token 的用途,滚动到本页 ExamplesCard 查看 cURL。
  */
-import { ArrowDown, Webhook } from 'lucide-react'
+import { ArrowDown, KeyRound } from 'lucide-react'
 import {
   Card,
   CardDescription,
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export const EXAMPLES_SECTION_ID = 'webhook-examples'
+export const EXAMPLES_SECTION_ID = 'api-tokens-examples'
 
 function scrollToExamples() {
   const el = document.getElementById(EXAMPLES_SECTION_ID)
@@ -26,12 +26,12 @@ export function IntroCard() {
       <CardHeader>
         <div className="flex items-start gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
-            <Webhook className="h-4 w-4" />
+            <KeyRound className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-base">Webhook 入站</CardTitle>
+            <CardTitle className="text-base">API Token</CardTitle>
             <CardDescription className="mt-1">
-              让 Claude Code / CI 脚本 / 开发环境无摩擦推入 issue
+              让 Claude Code / 脚本 / AI Agent 以 Bearer Token 调用完整 REST API —— 创建、修改、评论、改状态、查询皆可
             </CardDescription>
           </div>
           <button
