@@ -4,7 +4,7 @@ compatibility_date = "2026-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-APP_URL = "http://localhost:5173"
+APP_URL = "https://issue-management.2385614985.workers.dev"
 
 # Local development bindings; production uses `wrangler secret put` for secrets.
 [dev]
@@ -16,7 +16,7 @@ local_protocol = "http"
 [[d1_databases]]
 binding = "DB"
 database_name = "issue_management"
-database_id = "local-placeholder-uuid"
+database_id = "453a90f7-e4a8-4b97-815b-2a6e8da484e3"
 
 # R2 bucket binding — local dev uses miniflare's local filesystem storage.
 # Before `wrangler deploy`, ensure bucket exists: `wrangler r2 bucket create issue-attachments`.
@@ -28,7 +28,7 @@ bucket_name = "issue-attachments"
 # Before `wrangler deploy`, replace id with the real one from `wrangler kv namespace create issue_kv`.
 [[kv_namespaces]]
 binding = "KV"
-id = "local-placeholder-id"
+id = "d390f61040ef49d8b657e9d596fd9ac2"
 
 # Assets binding for serving the built Vite output alongside the Worker
 # Set after `npm run build` produces dist/
