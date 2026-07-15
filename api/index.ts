@@ -11,6 +11,7 @@ export type Env = {
   DB: D1Database
   R2: R2Bucket
   KV: KVNamespace
+  ASSETS: Fetcher
   JWT_SECRET: string
   APP_URL: string
   APP_PASSWORD: string
@@ -33,7 +34,17 @@ app.use('*', securityHeaders())
 
 app.route('/api', mountApiRoutes())
 
-app.notFound((c) => err(c, ErrorCodes.NOT_FOUND, ErrorMessages[ErrorCodes.NOT_FOUND]))
+// SPA fallback: non-API paths that don't match a static asset should serve
+// index.html so client-side routing (React Router) can handle them. Without
+// this, refreshing /list or /board returns a JSON 404 envelope from the
+// Worker and the SPA never boots.
+app.notFound((c) => {
+  const url = new URL(c.req.url)
+  if (url.pathname.startsWith('/api/')) {
+    return err(c, ErrorCodes.NOT_FOUND, ErrorMessages[ErrorCodes.NOT_FOUND])
+  }
+  return c.env.ASSETS.fetch(new Request(new URL('/', url), c.req.raw))
+})
 
 // Fallback for uncaught errors that escape errorHandler (should never happen).
 app.onError((e, c) => {
