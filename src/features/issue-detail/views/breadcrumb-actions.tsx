@@ -9,7 +9,7 @@
  * the confirmation modal.
  */
 import { useState } from 'react'
-import { Link, useNavigate, useNavigationType } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -27,6 +27,7 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { projectsQueryOptions } from '@/features/projects/queries'
 
 import { useUpdateIssueMutation } from '../mutations'
+import { getIssueDetailReturnTarget } from '../lib/return-target'
 import { DeleteIssueModal } from './dialogs/delete-issue.modal'
 
 interface BreadcrumbActionsProps {
@@ -39,7 +40,8 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
   const update = useUpdateIssueMutation()
   const { data: projects } = useQuery(projectsQueryOptions)
   const navigate = useNavigate()
-  const navigationType = useNavigationType()
+  const location = useLocation()
+  const returnTarget = getIssueDetailReturnTarget(location.state)
 
   const project = projects?.find((p) => p.id === issue.project_id)
   const archived = issue.status === 'archived'
@@ -48,15 +50,11 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
     void copy(window.location.href, '链接已复制')
   }
 
-  // Only walk back one step when React Router pushed the current entry (i.e.
-  // the previous entry is also inside the SPA). On first entry from an external
-  // link `navigationType` is 'POP', which would otherwise leave the app.
   const goBack = () => {
-    if (navigationType === 'PUSH') {
-      navigate(-1)
-    } else {
-      void navigate('/list')
-    }
+    void navigate({
+      pathname: returnTarget.pathname,
+      search: returnTarget.search,
+    })
   }
 
   const toggleArchive = () => {
@@ -76,7 +74,7 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
         aria-label="返回"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span className="hidden sm:inline">返回</span>
+        <span className="hidden sm:inline">返回{returnTarget.label}</span>
       </Button>
       <Separator orientation="vertical" className="h-5" />
       <nav
@@ -146,6 +144,7 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
 
       <DeleteIssueModal
         issueId={issue.id}
+        returnTo={returnTarget}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
       />

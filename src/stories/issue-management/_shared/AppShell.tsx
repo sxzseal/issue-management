@@ -73,9 +73,6 @@ function TopBar({
       className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4"
     >
       <div className="flex min-w-0 items-center gap-2">
-        <div className="grid h-8 w-8 place-items-center rounded-md bg-primary font-semibold text-primary-foreground">
-          I
-        </div>
         <span className="font-semibold tracking-tight">Issue</span>
         {breadcrumb ? (
           <>

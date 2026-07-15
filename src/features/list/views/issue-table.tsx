@@ -5,9 +5,10 @@
  * putting an <a> inside a <tr>.
  */
 import { useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import type { Issue } from '@/lib/api-types'
+import { makeIssueDetailLocationState } from '@/features/issue-detail/lib/return-target'
 import {
   Table,
   TableBody,
@@ -77,13 +78,20 @@ export function IssueTable({
   actions,
 }: IssueTableProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   // Stable identity so memoized IssueTableRow doesn't re-render on unrelated
   // ListView state churn (search debounce, modal open/close).
   const handleRowActivate = useCallback(
     (id: string) => {
-      void navigate(`/issue/${id}`)
+      void navigate(`/issue/${id}`, {
+        state: makeIssueDetailLocationState({
+          pathname: '/list',
+          search: location.search,
+          label: '列表',
+        }),
+      })
     },
-    [navigate],
+    [location.search, navigate],
   )
 
   return (

@@ -16,16 +16,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+import type { IssueDetailReturnTarget } from '../../lib/return-target'
 import { useDeleteIssueMutation } from '../../mutations'
 
 interface DeleteIssueModalProps {
   issueId: string
+  returnTo: IssueDetailReturnTarget
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 export function DeleteIssueModal({
   issueId,
+  returnTo,
   open,
   onOpenChange,
 }: DeleteIssueModalProps) {
@@ -36,9 +39,10 @@ export function DeleteIssueModal({
     del.mutate(issueId, {
       onSuccess: () => {
         onOpenChange(false)
-        // Always land on a known-safe page: the just-deleted issue is now 404,
-        // and `navigate(-1)` after external-link entry would leave the SPA.
-        void navigate('/list', { replace: true })
+        void navigate(
+          { pathname: returnTo.pathname, search: returnTo.search },
+          { replace: true },
+        )
       },
     })
   }

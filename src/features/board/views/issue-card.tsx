@@ -3,7 +3,7 @@
  * Priority chip opens the status select sheet (AC-023). Whole card navigates to
  * /issue/:id; the priority chip stops propagation so its click doesn't navigate.
  */
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { Calendar, KeyRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { Issue, IssuePriority } from '@/lib/api-types'
+import { makeIssueDetailLocationState } from '@/features/issue-detail/lib/return-target'
 
 // Priority chips consume the `--priority-p0..p3` HSL tokens from globals.css
 // so light/dark/theme changes flow through one source of truth rather than
@@ -74,9 +75,16 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
   const overdue = issue.due_date ? isOverdue(issue.due_date, today) : false
   const isDueToday = issue.due_date ? isToday(issue.due_date, today) : false
   const navigate = useNavigate()
+  const location = useLocation()
 
   const openDetail = () => {
-    void navigate(`/issue/${issue.id}`)
+    void navigate(`/issue/${issue.id}`, {
+      state: makeIssueDetailLocationState({
+        pathname: '/board',
+        search: location.search,
+        label: '看板',
+      }),
+    })
   }
 
   return (

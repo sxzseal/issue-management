@@ -1,12 +1,14 @@
 /**
- * TokenCreatedModal — 新 token 一次性展示对话框
+ * TokenCreatedModal — one-shot dialog shown after a token is minted.
  *
- * 明文只显示一次。除了 raw token
- * 本身，还提供一段"AI 接入说明"—— base URL + token 已嵌入，粘贴到 Claude
- * Code / Cursor / 其他 AI 工具的系统提示里即可让 AI 直接调用。
+ * Presents the raw token and a Claude Code Skill package: a one-line shell
+ * command that writes a ready-to-use `SKILL.md` into `~/.claude/skills/` so any
+ * future Claude Code session auto-loads it whenever the user asks to create /
+ * change / list issues, projects, comments, or labels. No CLAUDE.md editing
+ * required — the skill's frontmatter description is what triggers loading.
  */
 import { useMemo } from 'react'
-import { Check, Copy, Sparkles } from 'lucide-react'
+import { Check, Copy, Sparkles, Terminal } from 'lucide-react'
 
 import {
   Dialog,
@@ -19,7 +21,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { buildAiOnboardingSnippet } from '../../ai-onboarding-snippet'
+import {
+  buildInstallCommand,
+  buildSkillFile,
+  SKILL_INSTALL_PATH_DISPLAY,
+} from '../../ai-skill'
 
 interface TokenCreatedModalProps {
   open: boolean
@@ -29,9 +35,9 @@ interface TokenCreatedModalProps {
 }
 
 /**
- * Base URL for the AI snippet. Uses the browser's current origin — that's the
- * exact host the just-created token can actually reach (dev proxy, preview
- * deploy, or production URL). No config required.
+ * Base URL for the skill. Uses the browser's current origin — that's the exact
+ * host the just-created token can actually reach (dev proxy, preview deploy,
+ * or production URL). No config required.
  */
 function currentBaseUrl(): string {
   if (typeof window === 'undefined') return ''
@@ -45,12 +51,20 @@ export function TokenCreatedModal({
   name,
 }: TokenCreatedModalProps) {
   const tokenCopy = useCopyToClipboard()
-  const snippetCopy = useCopyToClipboard()
+  const installCopy = useCopyToClipboard()
+  const skillCopy = useCopyToClipboard()
 
-  const snippet = useMemo(() => {
+  const baseUrl = currentBaseUrl()
+
+  const installCommand = useMemo(() => {
     if (!token) return ''
-    return buildAiOnboardingSnippet(currentBaseUrl(), token)
-  }, [token])
+    return buildInstallCommand(baseUrl, token)
+  }, [token, baseUrl])
+
+  const skillFile = useMemo(() => {
+    if (!token) return ''
+    return buildSkillFile(baseUrl, token)
+  }, [token, baseUrl])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -59,7 +73,7 @@ export function TokenCreatedModal({
           <DialogTitle>Token 已生成 · {name}</DialogTitle>
           <DialogDescription>
             <span className="text-destructive">
-              此 Token 只显示一次，请立即保存。关闭后无法再次查看。
+              此 Token 只显示一次,请立即保存。关闭后无法再次查看。
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -96,45 +110,114 @@ export function TokenCreatedModal({
           </div>
         </div>
 
-        {/* Section 2 — AI onboarding snippet */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>AI 接入说明</span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                snippet && void snippetCopy.copy(snippet, '已复制 AI 接入说明')
-              }
-              className="gap-1.5"
-              disabled={!snippet}
-            >
-              {snippetCopy.copied ? (
-                <Check className="h-3.5 w-3.5" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-              {snippetCopy.copied ? '已复制' : '一键复制'}
-            </Button>
+        {/* Section 2 — Claude Code Skill */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>安装为 Claude Code Skill</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            贴到 Claude Code 的 <code className="font-mono">CLAUDE.md</code>
-            、Cursor 的 <code className="font-mono">.cursorrules</code> 或任何
-            AI 工具的系统提示里， AI 就能直接调用你的 issue-management API ——
-            增删改查、评论、改状态皆可。
+            把下面这条命令粘贴到终端执行,Claude Code
+            会在你之后要求"创建/查询/评论/改状态"issue 时自动加载,无需再编辑{' '}
+            <code className="font-mono">CLAUDE.md</code> 或每次贴 Token。
           </p>
-          <pre
-            className={cn(
-              'max-h-64 overflow-y-auto rounded-md border border-input bg-muted p-3',
-              'whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted-foreground',
-            )}
-          >
-            <code className="break-words">{snippet}</code>
-          </pre>
+
+          {/* Install path notice — path resolves at run time from $CLAUDE_CONFIG_DIR */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="shrink-0">安装到</span>
+            <code className="min-w-0 flex-1 truncate font-mono text-[11px]">
+              {SKILL_INSTALL_PATH_DISPLAY}
+            </code>
+          </div>
+
+          {/* Install command */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                <Terminal className="h-3.5 w-3.5" />
+                <span>一键安装命令</span>
+              </div>
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={() =>
+                  installCommand &&
+                  void installCopy.copy(installCommand, '已复制安装命令')
+                }
+                className="gap-1.5"
+                disabled={!installCommand}
+              >
+                {installCopy.copied ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {installCopy.copied ? '已复制' : '复制安装命令'}
+              </Button>
+            </div>
+            <pre
+              className={cn(
+                'max-h-32 overflow-y-auto rounded-md border border-input bg-muted p-3',
+                'whitespace-pre-wrap break-all font-mono text-[11px] leading-relaxed text-muted-foreground',
+              )}
+            >
+              <code className="break-all">{installCommand}</code>
+            </pre>
+          </div>
+
+          {/* SKILL.md preview */}
+          <details className="group rounded-md border border-input bg-muted/40">
+            <summary
+              className={cn(
+                'flex cursor-pointer items-center justify-between gap-2 px-3 py-2',
+                'text-xs font-medium text-foreground',
+              )}
+            >
+              <span>
+                预览 <code className="font-mono">SKILL.md</code> 内容
+              </span>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (skillFile)
+                    void skillCopy.copy(skillFile, '已复制 SKILL.md')
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (skillFile)
+                    void skillCopy.copy(skillFile, '已复制 SKILL.md')
+                }}
+                aria-disabled={!skillFile}
+                className={cn(
+                  'inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs',
+                  'text-muted-foreground transition-colors hover:bg-muted',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  !skillFile && 'pointer-events-none opacity-50',
+                )}
+              >
+                {skillCopy.copied ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {skillCopy.copied ? '已复制' : '复制文件'}
+              </span>
+            </summary>
+            <pre
+              className={cn(
+                'max-h-64 overflow-y-auto border-t border-input px-3 py-3',
+                'whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted-foreground',
+              )}
+            >
+              <code className="break-words">{skillFile}</code>
+            </pre>
+          </details>
         </div>
 
         <DialogFooter>

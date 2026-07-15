@@ -2,11 +2,12 @@
  * IssueCardMobile — <768 stacked card, keeps status/priority/project/due
  * signals visible in one glance. Wraps the whole card in a Link to /issue/:id.
  */
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import type { Issue } from '@/lib/api-types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { makeIssueDetailLocationState } from '@/features/issue-detail/lib/return-target'
 import {
   PRIORITY_CLASS,
   PRIORITY_LABEL,
@@ -19,9 +20,16 @@ interface IssueCardMobileProps {
 }
 
 export function IssueCardMobile({ issue }: IssueCardMobileProps) {
+  const location = useLocation()
+
   return (
     <Link
       to={`/issue/${issue.id}`}
+      state={makeIssueDetailLocationState({
+        pathname: '/list',
+        search: location.search,
+        label: '列表',
+      })}
       className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Card className="flex flex-col gap-2 p-3 transition-colors hover:bg-muted/40">

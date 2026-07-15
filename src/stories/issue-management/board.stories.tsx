@@ -299,7 +299,7 @@ function BoardColumn({ status, issues, onNewInColumn }: ColumnProps) {
       <div role="list" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
         {issues.length === 0 ? (
           <div className="grid h-32 place-items-center rounded-md border border-dashed border-border/60 px-4 text-center text-xs text-muted-foreground">
-            把卡片拖到这里
+            暂无卡片
           </div>
         ) : (
           issues.map((issue) => (
@@ -752,7 +752,7 @@ export const WithCreateDialog: Story = {
   },
 }
 
-/** 已完成列为空：验证列空态"把卡片拖到这里"提示。 */
+/** 已完成列为空：验证列空态"暂无卡片"提示。 */
 export const EmptyDone: Story = {
   tags: ['draft'],
   args: {

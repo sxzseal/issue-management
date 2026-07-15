@@ -54,7 +54,7 @@ export function BoardColumn({
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2" role="list">
         {column.issues.length === 0 ? (
           <div className="grid h-32 place-items-center rounded-md border border-dashed border-input p-8 text-center text-xs text-muted-foreground">
-            把卡片拖到这里
+            暂无卡片
           </div>
         ) : (
           column.issues.map((issue) => (

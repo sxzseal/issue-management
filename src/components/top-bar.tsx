@@ -50,8 +50,9 @@ export function TopBar({ onLogout, className }: TopBarProps) {
         className,
       )}
     >
-      <img src="/logo.svg" alt="Issue 管理平台" className="h-8 w-8" />
-      <span className="text-lg font-bold text-foreground">{title}</span>
+      <span className="min-w-0 truncate text-lg font-bold text-foreground">
+        {title}
+      </span>
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
