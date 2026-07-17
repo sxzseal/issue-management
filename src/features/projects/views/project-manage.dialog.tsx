@@ -28,8 +28,16 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import { RequestError } from '@/lib/request'
-import type { Project } from '@/lib/api-types'
+import type { Project, ProjectStatus } from '@/lib/api-types'
 import {
   createProjectBodySchema,
   type CreateProjectBody,
@@ -42,6 +50,11 @@ import {
   useDeleteProjectMutation,
   useUpdateProjectMutation,
 } from '../mutations'
+import {
+  PROJECT_STATUS_DOT_CLASS,
+  PROJECT_STATUS_LABEL,
+  PROJECT_STATUS_ORDER,
+} from '../status-visuals'
 
 const DEFAULT_COLOR = '#6366f1'
 
@@ -110,11 +123,13 @@ function ProjectRow({ project }: ProjectRowProps) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [name, setName] = useState(project.name)
   const [color, setColor] = useState(project.color)
+  const [status, setStatus] = useState<ProjectStatus>(project.status)
   const updateMutation = useUpdateProjectMutation()
 
   const resetEdit = () => {
     setName(project.name)
     setColor(project.color)
+    setStatus(project.status)
     setMode('view')
   }
 
@@ -122,6 +137,7 @@ function ProjectRow({ project }: ProjectRowProps) {
     const body: UpdateProjectBody = {}
     if (name !== project.name) body.name = name.trim()
     if (color !== project.color) body.color = color
+    if (status !== project.status) body.status = status
     if (Object.keys(body).length === 0) {
       setMode('view')
       return
@@ -134,45 +150,74 @@ function ProjectRow({ project }: ProjectRowProps) {
 
   if (mode === 'edit') {
     return (
-      <li className="flex items-center gap-2 px-3 py-2">
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="h-6 w-6 flex-none cursor-pointer rounded border border-input bg-transparent"
-          aria-label="项目颜色"
-          disabled={updateMutation.isPending}
-        />
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={50}
-          disabled={project.is_inbox || updateMutation.isPending}
-          className="h-8"
-          aria-label="项目名称"
-        />
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={submitEdit}
-          disabled={updateMutation.isPending || !name.trim()}
-          aria-label="保存"
-        >
-          {updateMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Check className="h-4 w-4" />
-          )}
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={resetEdit}
-          disabled={updateMutation.isPending}
-          aria-label="取消"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      <li className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center">
+        <div className="flex flex-1 items-center gap-2">
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-6 w-6 flex-none cursor-pointer rounded border border-input bg-transparent"
+            aria-label="项目颜色"
+            disabled={updateMutation.isPending}
+          />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={50}
+            disabled={project.is_inbox || updateMutation.isPending}
+            className="h-8"
+            aria-label="项目名称"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={status}
+            onValueChange={(v) => setStatus(v as ProjectStatus)}
+            disabled={project.is_inbox || updateMutation.isPending}
+          >
+            <SelectTrigger className="h-8 w-32" aria-label="项目状态">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PROJECT_STATUS_ORDER.map((s) => (
+                <SelectItem key={s} value={s}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'h-2 w-2 rounded-full',
+                        PROJECT_STATUS_DOT_CLASS[s],
+                      )}
+                    />
+                    {PROJECT_STATUS_LABEL[s]}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={submitEdit}
+            disabled={updateMutation.isPending || !name.trim()}
+            aria-label="保存"
+          >
+            {updateMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={resetEdit}
+            disabled={updateMutation.isPending}
+            aria-label="取消"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </li>
     )
   }
@@ -191,6 +236,21 @@ function ProjectRow({ project }: ProjectRowProps) {
             Inbox
           </span>
         ) : null}
+      </span>
+      <span
+        className={cn(
+          'flex flex-none items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground',
+        )}
+        aria-label={`状态: ${PROJECT_STATUS_LABEL[project.status]}`}
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'h-1.5 w-1.5 rounded-full',
+            PROJECT_STATUS_DOT_CLASS[project.status],
+          )}
+        />
+        {PROJECT_STATUS_LABEL[project.status]}
       </span>
       <Button
         size="icon"
@@ -328,12 +388,13 @@ function CreateProjectForm() {
   const createMutation = useCreateProjectMutation()
   const form = useForm<CreateProjectBody>({
     resolver: zodResolver(createProjectBodySchema),
-    defaultValues: { name: '', color: DEFAULT_COLOR },
+    defaultValues: { name: '', color: DEFAULT_COLOR, status: 'planning' },
   })
 
   const onSubmit = (values: CreateProjectBody) => {
     createMutation.mutate(values, {
-      onSuccess: () => form.reset({ name: '', color: DEFAULT_COLOR }),
+      onSuccess: () =>
+        form.reset({ name: '', color: DEFAULT_COLOR, status: 'planning' }),
     })
   }
 
@@ -377,6 +438,38 @@ function CreateProjectForm() {
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem className="flex-none space-y-0">
+                <Select
+                  value={field.value ?? 'planning'}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className="h-9 w-28" aria-label="新项目状态">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROJECT_STATUS_ORDER.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden
+                            className={cn(
+                              'h-2 w-2 rounded-full',
+                              PROJECT_STATUS_DOT_CLASS[s],
+                            )}
+                          />
+                          {PROJECT_STATUS_LABEL[s]}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormItem>
             )}
           />

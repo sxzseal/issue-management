@@ -35,6 +35,13 @@
     --status-done: 142 71% 45%;
     --status-archived: 220 9% 70%;
 
+    /* Project status — display-only groupings in the sidebar / manage dialog.
+       Distinct from --status-* (issue status) so a redesign of one can't
+       accidentally shift the other. */
+    --project-status-planning: 262 60% 60%;
+    --project-status-active: 221 83% 53%;
+    --project-status-archived: 220 9% 55%;
+
     /* Feedback tokens for status badges (API token active/revoked, etc.). */
     --feedback-success: 142 71% 45%;
     --feedback-warning: 38 92% 50%;
@@ -71,6 +78,10 @@
     --status-in-progress: 217 91% 60%;
     --status-done: 142 60% 55%;
     --status-archived: 220 9% 45%;
+
+    --project-status-planning: 262 70% 70%;
+    --project-status-active: 217 91% 60%;
+    --project-status-archived: 220 9% 45%;
 
     --feedback-success: 142 60% 55%;
     --feedback-warning: 38 92% 60%;

@@ -24,9 +24,8 @@ cp .dev.vars.example .dev.vars   # 或手动创建
 #   JWT_SECRET    = "<32+ 字节随机串>"
 #   WEBHOOK_SECRET = "<webhook 签名密钥>"
 
-# 初始化本地 D1(SQLite)
+# 初始化本地 D1(SQLite)，会按顺序应用 migrations/
 npm run db:local:init
-npm run db:local:seed
 
 # 双终端启动
 npm run worker:dev    # Worker  → http://127.0.0.1:8787

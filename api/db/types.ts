@@ -11,6 +11,7 @@
 export type IssueStatus = 'todo' | 'in_progress' | 'done' | 'archived'
 export type IssuePriority = 'p0' | 'p1' | 'p2' | 'p3'
 export type IssueSource = 'manual' | 'api'
+export type ProjectStatus = 'planning' | 'active' | 'archived'
 
 /** SQLite boolean stored as 0 or 1. */
 export type SqliteBool = 0 | 1
@@ -24,6 +25,8 @@ export interface ProjectRow {
   color: string
   is_inbox: SqliteBool
   sort_order: number
+  status: ProjectStatus
+  archived_at: string | null
   created_at: string
   updated_at: string
 }

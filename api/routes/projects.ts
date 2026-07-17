@@ -36,10 +36,15 @@ function rowToProject(r: ProjectRow): Project {
     color: r.color,
     is_inbox: r.is_inbox === 1,
     sort_order: r.sort_order,
+    status: r.status,
+    archived_at: r.archived_at,
     created_at: r.created_at,
     updated_at: r.updated_at,
   }
 }
+
+const PROJECT_COLUMNS =
+  'id, name, color, is_inbox, sort_order, status, archived_at, created_at, updated_at'
 
 function genProjectId(): string {
   return 'proj_' + crypto.randomUUID().replace(/-/g, '').slice(0, 10)
@@ -50,7 +55,7 @@ function genProjectId(): string {
 // ---------------------------------------------------------------------------
 app.get('/', async (c) => {
   const rs = await c.env.DB.prepare(
-    `SELECT id, name, color, is_inbox, sort_order, created_at, updated_at
+    `SELECT ${PROJECT_COLUMNS}
      FROM ${TABLES.projects}
      ORDER BY is_inbox DESC, sort_order ASC, name ASC`,
   ).all<ProjectRow>()
@@ -102,13 +107,15 @@ app.post('/', async (c) => {
 
   const id = genProjectId()
   const now = new Date().toISOString()
+  const status = body.status ?? 'planning'
+  const archivedAt = status === 'archived' ? now : null
 
   await c.env.DB.prepare(
     `INSERT INTO ${TABLES.projects}
-      (id, name, color, is_inbox, sort_order, created_at, updated_at)
-     VALUES (?, ?, ?, 0, ?, ?, ?)`,
+      (id, name, color, is_inbox, sort_order, status, archived_at, created_at, updated_at)
+     VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)`,
   )
-    .bind(id, body.name, body.color, sortOrder, now, now)
+    .bind(id, body.name, body.color, sortOrder, status, archivedAt, now, now)
     .run()
 
   const project: Project = {
@@ -117,6 +124,8 @@ app.post('/', async (c) => {
     color: body.color,
     is_inbox: false,
     sort_order: sortOrder,
+    status,
+    archived_at: archivedAt,
     created_at: now,
     updated_at: now,
   }
@@ -130,7 +139,7 @@ app.patch('/:id', async (c) => {
   const id = c.req.param('id')
 
   const existing = await c.env.DB.prepare(
-    `SELECT id, name, color, is_inbox, sort_order, created_at, updated_at
+    `SELECT ${PROJECT_COLUMNS}
      FROM ${TABLES.projects}
      WHERE id = ?`,
   )
@@ -165,6 +174,14 @@ app.patch('/:id', async (c) => {
     return err(c, ErrorCodes.VALIDATION_FAILED, 'Inbox 项目名不可修改')
   }
 
+  if (
+    existing.is_inbox === 1 &&
+    body.status !== undefined &&
+    body.status !== existing.status
+  ) {
+    return err(c, ErrorCodes.VALIDATION_FAILED, 'Inbox 项目状态不可修改')
+  }
+
   if (body.name !== undefined && body.name !== existing.name) {
     const dup = await c.env.DB.prepare(
       `SELECT id FROM ${TABLES.projects} WHERE name = ? AND id <> ?`,
@@ -177,7 +194,7 @@ app.patch('/:id', async (c) => {
   }
 
   const sets: string[] = []
-  const values: Array<string | number> = []
+  const values: Array<string | number | null> = []
   if (body.name !== undefined) {
     sets.push('name = ?')
     values.push(body.name)
@@ -190,8 +207,21 @@ app.patch('/:id', async (c) => {
     sets.push('sort_order = ?')
     values.push(body.sort_order)
   }
-
   const now = new Date().toISOString()
+  if (body.status !== undefined && body.status !== existing.status) {
+    sets.push('status = ?')
+    values.push(body.status)
+    // archived_at is bookkeeping — stamp on entry, clear on exit — so callers
+    // don't have to send it and inconsistent states are impossible.
+    if (body.status === 'archived') {
+      sets.push('archived_at = ?')
+      values.push(now)
+    } else if (existing.status === 'archived') {
+      sets.push('archived_at = ?')
+      values.push(null)
+    }
+  }
+
   sets.push('updated_at = ?')
   values.push(now)
 
@@ -212,7 +242,7 @@ app.patch('/:id', async (c) => {
   }
 
   const updated = await c.env.DB.prepare(
-    `SELECT id, name, color, is_inbox, sort_order, created_at, updated_at
+    `SELECT ${PROJECT_COLUMNS}
      FROM ${TABLES.projects}
      WHERE id = ?`,
   )

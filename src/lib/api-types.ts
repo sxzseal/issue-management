@@ -12,6 +12,7 @@
 export type IssueStatus = 'todo' | 'in_progress' | 'done' | 'archived'
 export type IssuePriority = 'p0' | 'p1' | 'p2' | 'p3'
 export type IssueSource = 'manual' | 'api'
+export type ProjectStatus = 'planning' | 'active' | 'archived'
 
 export interface Project {
   id: string
@@ -20,6 +21,9 @@ export interface Project {
   /** Deserialized from D1 INTEGER 0/1 on the Worker side. */
   is_inbox: boolean
   sort_order: number
+  status: ProjectStatus
+  /** ISO 8601 UTC; set only when status === 'archived'. */
+  archived_at: string | null
   created_at: string
   updated_at: string
 }

@@ -54,7 +54,8 @@ export function DeleteTokenModal({
         <DialogHeader>
           <DialogTitle>确定要删除「{tokenName ?? '此 Token'}」？</DialogTitle>
           <DialogDescription>
-            删除后 Token 将立即失效，所有携带此 Token 的请求都会返回 401；操作不可撤回。
+            删除后 Token 将立即失效，所有携带此 Token 的请求都会返回
+            401；操作不可撤回。
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
