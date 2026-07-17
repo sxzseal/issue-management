@@ -2,9 +2,10 @@
  * API token management — session-authenticated owner only.
  *
  * Mounted at `/api/settings/api-tokens/*` from `api/routes/index.ts`.
- *   GET  /              → list all tokens (active + revoked, newest first)
- *   POST /              → mint a new token (raw returned ONCE)
- *   POST /:id/revoke    → soft-revoke (sets revoked_at)
+ *   GET    /              → list all tokens (active + revoked, newest first)
+ *   POST   /              → mint a new token (raw returned ONCE)
+ *   POST   /:id/revoke    → soft-revoke (sets revoked_at, row kept for audit)
+ *   DELETE /:id           → hard-delete (row removed, token invalidated)
  *
  * Self-protection: API tokens are rejected on this router — a compromised
  * token must not be able to mint new tokens or revoke others. Only a real
@@ -173,6 +174,37 @@ app.post('/:id/revoke', async (c) => {
 
   console.warn(`api-token audit: revoked id=${id}`)
   return ok(c, rowToApiToken({ ...row, revoked_at: revokedAt }))
+})
+
+// ---------------------------------------------------------------------------
+// DELETE /:id — hard-delete (idempotent, invalidates token immediately)
+//
+// Removes the row entirely. `verifyApiToken` filters by row existence + not
+// revoked, so a deleted token can no longer authenticate. Unknown IDs return
+// UNAUTHORIZED (same rationale as revoke) to keep the ID space opaque.
+// ---------------------------------------------------------------------------
+app.delete('/:id', async (c) => {
+  const id = c.req.param('id')
+  const row = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.apiTokens} WHERE id = ? LIMIT 1`,
+  )
+    .bind(id)
+    .first<{ id: string }>()
+
+  if (!row) {
+    return err(
+      c,
+      ErrorCodes.UNAUTHORIZED,
+      ErrorMessages[ErrorCodes.UNAUTHORIZED],
+    )
+  }
+
+  await c.env.DB.prepare(`DELETE FROM ${TABLES.apiTokens} WHERE id = ?`)
+    .bind(id)
+    .run()
+
+  console.warn(`api-token audit: deleted id=${id}`)
+  return ok(c, { id, deleted: true })
 })
 
 export default app

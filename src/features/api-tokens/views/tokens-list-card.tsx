@@ -3,10 +3,10 @@
  *
  * 桌面端 Table：名称 / 前缀 / 创建时间 / 上次使用 / 状态 / 操作
  * 移动端（<md）：卡片流
- * 撤销：软删除，撤销行灰化保留在列表中供审计。
+ * 删除：硬删除，行从库中移除，Token 立即失效。
  */
 import { useState } from 'react'
-import { Ban } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,10 +27,9 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { ApiToken } from '@/lib/api-types'
-import { RevokeTokenModal } from './dialogs/revoke-token.modal'
+import { DeleteTokenModal } from './dialogs/delete-token.modal'
 
 const NEVER = '从未使用'
-const NONE = '—'
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return NEVER
@@ -65,9 +64,10 @@ interface TokensListCardProps {
 }
 
 export function TokensListCard({ tokens }: TokensListCardProps) {
-  const [target, setTarget] = useState<{ id: string; name: string } | null>(
-    null,
-  )
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    name: string
+  } | null>(null)
   const isEmpty = tokens.length === 0
 
   return (
@@ -75,7 +75,7 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">已发放的 Token</CardTitle>
-          <CardDescription>撤销后仍会保留一行用于审计</CardDescription>
+          <CardDescription>删除后 Token 立即失效，操作不可撤回</CardDescription>
         </CardHeader>
         <CardContent>
           {isEmpty ? (
@@ -126,24 +126,18 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                             <StatusBadge revoked={revoked} />
                           </TableCell>
                           <TableCell className="text-right">
-                            {revoked ? (
-                              <span className="text-xs text-muted-foreground">
-                                {NONE}
-                              </span>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() =>
-                                  setTarget({ id: t.id, name: t.name })
-                                }
-                              >
-                                <Ban className="h-3.5 w-3.5" />
-                                撤销
-                              </Button>
-                            )}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() =>
+                                setDeleteTarget({ id: t.id, name: t.name })
+                              }
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              删除
+                            </Button>
                           </TableCell>
                         </TableRow>
                       )
@@ -178,22 +172,20 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
                         <div>创建 {formatDateTime(t.created_at)}</div>
                         <div>上次 {formatDateTime(t.last_used_at)}</div>
                       </div>
-                      {!revoked && (
-                        <div className="pt-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="w-full gap-1.5 text-destructive"
-                            onClick={() =>
-                              setTarget({ id: t.id, name: t.name })
-                            }
-                          >
-                            <Ban className="h-3.5 w-3.5" />
-                            撤销
-                          </Button>
-                        </div>
-                      )}
+                      <div className="pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-1.5 text-destructive"
+                          onClick={() =>
+                            setDeleteTarget({ id: t.id, name: t.name })
+                          }
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          删除
+                        </Button>
+                      </div>
                     </div>
                   )
                 })}
@@ -203,13 +195,13 @@ export function TokensListCard({ tokens }: TokensListCardProps) {
         </CardContent>
       </Card>
 
-      <RevokeTokenModal
-        open={target !== null}
+      <DeleteTokenModal
+        open={deleteTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setTarget(null)
+          if (!open) setDeleteTarget(null)
         }}
-        tokenId={target?.id ?? null}
-        tokenName={target?.name ?? null}
+        tokenId={deleteTarget?.id ?? null}
+        tokenName={deleteTarget?.name ?? null}
       />
     </>
   )

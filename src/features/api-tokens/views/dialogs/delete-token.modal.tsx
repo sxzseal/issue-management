@@ -1,10 +1,10 @@
 /**
- * RevokeTokenModal — 撤销确认对话框
+ * DeleteTokenModal — 永久删除确认对话框
  *
- * 撤销是软删除（服务端置 revoked_at），列表里仍然可见但不可用。文案强调
- * 「所有用它调用的脚本会立即 401」。
+ * 删除是硬删除（服务端 DELETE FROM）。行会从列表中彻底消失，token 立即失效
+ * (auth-guard 找不到行 → 401)。相较撤销，此操作丢弃审计记录。
  */
-import { Loader2, Ban } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 
 import {
   Dialog,
@@ -15,22 +15,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useRevokeApiTokenMutation } from '../../mutations'
+import { useDeleteApiTokenMutation } from '../../mutations'
 
-interface RevokeTokenModalProps {
+interface DeleteTokenModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   tokenId: string | null
   tokenName: string | null
 }
 
-export function RevokeTokenModal({
+export function DeleteTokenModal({
   open,
   onOpenChange,
   tokenId,
   tokenName,
-}: RevokeTokenModalProps) {
-  const mutation = useRevokeApiTokenMutation()
+}: DeleteTokenModalProps) {
+  const mutation = useDeleteApiTokenMutation()
 
   const handleConfirm = async (): Promise<void> => {
     if (!tokenId) return
@@ -52,9 +52,9 @@ export function RevokeTokenModal({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>确定要撤销「{tokenName ?? '此 Token'}」？</DialogTitle>
+          <DialogTitle>确定要删除「{tokenName ?? '此 Token'}」？</DialogTitle>
           <DialogDescription>
-            撤销后所有携带此 Token 的请求都会立即返回 401；操作不可撤回。
+            删除后 Token 将立即失效，所有携带此 Token 的请求都会返回 401；操作不可撤回。
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -74,9 +74,9 @@ export function RevokeTokenModal({
             {mutation.isPending ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Ban className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" />
             )}
-            撤销
+            删除
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { humanError, request } from '@/lib/request'
-import type { ApiToken, CreatedApiToken } from '@/lib/api-types'
+import type { CreatedApiToken } from '@/lib/api-types'
 
 /**
  * Mint a new API token. The server returns the raw `token` ONCE — the caller
@@ -26,25 +26,25 @@ export function useCreateApiTokenMutation() {
 }
 
 /**
- * Soft-revoke a token. The row stays visible in the list with `revoked_at`
- * populated so the user can audit past usage.
+ * Hard-delete a token. The row is removed from the database entirely; the
+ * token can no longer authenticate (auth-guard filters by row existence).
  */
-export function useRevokeApiTokenMutation() {
+export function useDeleteApiTokenMutation() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) =>
-      request<ApiToken>(
-        `/api/settings/api-tokens/${encodeURIComponent(id)}/revoke`,
+      request<{ id: string; deleted: true }>(
+        `/api/settings/api-tokens/${encodeURIComponent(id)}`,
         {
-          method: 'POST',
+          method: 'DELETE',
         },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['api-tokens'] })
-      toast.success('Token 已撤销')
+      toast.success('Token 已删除')
     },
     onError: (e) => {
-      toast.error(humanError(e, 'Token 撤销失败'))
+      toast.error(humanError(e, 'Token 删除失败'))
     },
   })
 }
