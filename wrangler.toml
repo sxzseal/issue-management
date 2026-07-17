@@ -4,7 +4,7 @@ compatibility_date = "2026-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-APP_URL = "https://issue-management.2385614985.workers.dev"
+APP_URL = "https://sxlw.ltd"
 
 # Local development bindings; production uses `wrangler secret put` for secrets.
 [dev]
