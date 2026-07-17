@@ -12,6 +12,7 @@ import { apiTokensQueries } from '../queries'
 import { IntroCard } from './intro-card'
 import { CreateTokenCard } from './create-token-card'
 import { TokensListCard } from './tokens-list-card'
+import { UpdateSkillCard } from './update-skill-card'
 import { ExamplesCard } from './examples-card'
 
 export function ApiTokensView() {
@@ -36,6 +37,7 @@ export function ApiTokensView() {
           ) : (
             <TokensListCard tokens={data} />
           )}
+          <UpdateSkillCard />
           <ExamplesCard />
         </div>
       </div>

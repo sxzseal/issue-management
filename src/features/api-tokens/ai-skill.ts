@@ -21,7 +21,7 @@ const HEREDOC_SENTINEL = 'IMEOF'
 export function buildSkillFile(baseUrl: string, token: string): string {
   return `---
 name: ${SKILL_NAME}
-description: Use whenever the user asks to log, track, create, list, update, comment on, or close an issue / task / bug / todo in their personal issue-management system at ${baseUrl}. Triggers on phrases like "记一下这个 bug", "加个 issue", "log this", "track this task", "创建 issue", "改状态", "评论", "list issues", "close this", or any CRUD request against issues/projects/comments/labels. On invocation, always follow the "Create-or-update issue playbook" below — resolve the current project from git/cwd first, dedupe against open issues, then create or comment. Contains base URL, bearer token, endpoint catalog, and JSON envelope contract; no extra setup.
+description: Use whenever the user asks to log, track, create, list, update, comment on, close, or bulk-modify issues / tasks / bugs / todos in their personal issue-management system at ${baseUrl}. Triggers on phrases like "记一下这个 bug", "加个 issue", "log this", "track this task", "创建 issue", "改状态", "评论", "list issues", "close this", "把这几条都…", "批量改", "批量删", "全部归档", "都改成 p1", "给这几个加标签", or any CRUD request against issues/projects/comments/labels. On invocation, for single-item create/update follow the "Create-or-update issue playbook" below — resolve the current project from git/cwd first, dedupe against open issues, then create or comment. For multi-item requests use the bulk endpoints listed under "Bulk field patch / labels / delete" instead of looping. Contains base URL, bearer token, endpoint catalog, and JSON envelope contract; no extra setup.
 ---
 
 # Issue Management API
@@ -164,7 +164,9 @@ Never dump the raw envelope at the user.
 ### Status change
 
 Prefer \`PATCH /api/issues/:id/status\` (dedicated endpoint) over the general
-\`PATCH /api/issues/:id\` for status-only changes.
+\`PATCH /api/issues/:id\` for status-only changes. For **multiple issues at
+once**, use \`PATCH /api/issues/bulk\` with \`{ ids, patch: { status } }\`
+instead of looping.
 
 ### Listing
 
@@ -175,8 +177,55 @@ p0/p1 first.
 
 ### Bulk creation
 
-If the user asks to log multiple items in one turn: resolve the project ONCE,
-then loop through Step 2 → Step 3 per item. Deduplicate each independently.
+When the user hands you a list to log (e.g. "把这几条都加进去"):
+
+1. Resolve the project ONCE (Step 1).
+2. Run Step 2 (dedup) for each title. Drop duplicates — comment on the existing
+   issue instead where appropriate.
+3. For every title that survives dedup, use \`POST /api/issues/bulk\` in a
+   **single** call — do NOT loop \`POST /api/issues\` per item.
+
+\`\`\`
+curl -s -X POST -H "Authorization: Bearer ${token}" \\
+     -H "Content-Type: application/json" \\
+     -d '{"project_id":"<id>","titles":["...","..."],"priority":"p2"}' \\
+     ${baseUrl}/api/issues/bulk
+\`\`\`
+
+Constraints: \`titles\` is 1..100 entries, each 1..200 chars. All rows in one
+bulk call share \`project_id\` / \`status\` / \`priority\` / \`label_ids\` /
+\`due_date\` — split into multiple bulk calls if the metadata differs. The bulk
+endpoint does **not** accept per-item \`body\`; if any item needs a
+source-context body (Step 3), create that one via \`POST /api/issues\` and put
+the rest through \`/bulk\`.
+
+Response: \`{ status_code: 0, data: { issues: Issue[] } }\` — report the count
+back to the user plus a link to the project view, not each individual URL.
+
+### Bulk field patch / labels / delete
+
+When the user asks to modify or delete **many issues at once** (e.g. "把 p3 的
+都降成 p2"、"给这几条都加 bug 标签"、"把已归档超过 30 天的都删了"), do NOT loop
+single-item endpoints — use the bulk variants below. Each takes up to 100 ids
+per call; split into multiple calls if you have more.
+
+- \`PATCH /api/issues/bulk\` — shared patch: \`{ ids, patch: { status?,
+  priority?, due_date?, project_id? } }\`. \`patch\` must include at least one
+  field; all listed ids get the exact same patch. Use this for \`status\` too
+  when the change spans multiple issues; single-item
+  \`PATCH /api/issues/:id/status\` is still fine for one row.
+- \`POST /api/issues/bulk/labels\` — \`{ ids, label_ids, mode }\` with
+  \`mode\` = \`add\` | \`remove\` | \`replace\`. **Prefer \`add\`/\`remove\` for
+  incremental changes** — \`replace\` overwrites the full label set on each
+  issue and will silently drop any existing label not in \`label_ids\`.
+  \`label_ids: []\` is only valid with \`replace\`, and clears labels.
+- \`DELETE /api/issues/bulk\` — body \`{ ids }\`. **Destructive**: confirm with
+  the user before firing unless they explicitly asked for the deletion (e.g.
+  "把这几条删掉" — clear; "整理一下" — ambiguous, confirm first).
+
+All three fail with 404 if any id (or referenced project_id / label_id) is
+missing — they don't partial-apply. Dedup ids client-side is unnecessary; the
+server dedupes.
 
 ---
 
@@ -191,6 +240,10 @@ then loop through Step 2 → Step 3 per item. Deduplicate each independently.
 ### Issues
 - \`GET  /api/issues?project_id=&status=&priority=&labels=&q=&page=&page_size=\` — paginated list
 - \`POST /api/issues\` — \`{ project_id, title, body?, priority, status?, due_date?, label_ids? }\`
+- \`POST /api/issues/bulk\` — \`{ project_id, titles: string[] (1..100), status?, priority?, label_ids?, due_date? }\` → \`{ issues: Issue[] }\`
+- \`PATCH /api/issues/bulk\` — \`{ ids: string[] (1..100), patch: { status?, priority?, due_date?, project_id? } }\` → \`{ ids, patch, updated_at }\`
+- \`POST /api/issues/bulk/labels\` — \`{ ids: string[] (1..100), label_ids: string[] (0..10 for replace, 1..10 otherwise), mode: 'add'|'remove'|'replace' }\` → \`{ ids, mode, label_ids, updated_at }\`
+- \`DELETE /api/issues/bulk\` — body \`{ ids: string[] (1..100) }\` → \`{ ids, deleted }\`
 - \`GET  /api/issues/:id\` — detail (includes \`body_full\`, \`labels[]\`)
 - \`PATCH /api/issues/:id\` — partial update (\`title\`/\`body\`/\`priority\`/\`label_ids\`/\`due_date\`/\`project_id\`)
 - \`PATCH /api/issues/:id/status\` — \`{ status }\`

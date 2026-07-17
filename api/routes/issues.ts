@@ -25,6 +25,10 @@ import type { IssueRow, LabelRow } from '../db/types'
 import type { Issue, IssueDetail, Label } from '../../src/lib/api-types'
 import { ErrorCodes, ErrorMessages } from '../../src/lib/error-codes'
 import {
+  bulkCreateIssueBodySchema,
+  bulkDeleteIssueBodySchema,
+  bulkIssueLabelsBodySchema,
+  bulkUpdateIssueBodySchema,
   createIssueBodySchema,
   listIssuesQuerySchema,
   updateIssueBodySchema,
@@ -396,6 +400,399 @@ app.post('/', async (c) => {
     archived_at: null,
   }
   return ok(c, issue, { httpStatus: 201 })
+})
+
+// -----------------------------------------------------------------------------
+// POST /bulk  — batch create, one row per title, shared metadata
+// -----------------------------------------------------------------------------
+app.post('/bulk', async (c) => {
+  let json: unknown
+  try {
+    json = await c.req.json()
+  } catch {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const parsed = bulkCreateIssueBodySchema.safeParse(json)
+  if (!parsed.success) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const data = parsed.data
+
+  const projectRow = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.projects} WHERE id = ?`,
+  )
+    .bind(data.project_id)
+    .first<{ id: string }>()
+  if (!projectRow) {
+    return err(c, ErrorCodes.NOT_FOUND, '项目不存在')
+  }
+
+  let labelRows: LabelRow[] = []
+  if (data.label_ids.length > 0) {
+    const placeholders = data.label_ids.map(() => '?').join(',')
+    const labelRs = await c.env.DB.prepare(
+      `SELECT * FROM ${TABLES.labels} WHERE id IN (${placeholders})`,
+    )
+      .bind(...data.label_ids)
+      .all<LabelRow>()
+    labelRows = labelRs.results ?? []
+    if (labelRows.length !== data.label_ids.length) {
+      return err(c, ErrorCodes.NOT_FOUND, '标签不存在')
+    }
+  }
+
+  const source: 'manual' | 'api' =
+    c.get('authKind') === 'api-token' ? 'api' : 'manual'
+  const sourceName = source === 'api' ? (c.get('authTokenId') ?? null) : null
+  const now = nowIso()
+  const labels = labelRows.map(rowToLabel)
+
+  const statements: D1PreparedStatement[] = []
+  const issues: Issue[] = []
+
+  for (const title of data.titles) {
+    const id = newIssueId()
+    statements.push(
+      c.env.DB.prepare(
+        `INSERT INTO ${TABLES.issues}
+          (id, project_id, title, body, body_r2_key, status, priority, due_date,
+           external_ref, source, source_name, created_at, updated_at, archived_at)
+         VALUES (?, ?, ?, NULL, NULL, ?, ?, ?, NULL, ?, ?, ?, ?, NULL)`,
+      ).bind(
+        id,
+        data.project_id,
+        title,
+        data.status,
+        data.priority,
+        data.due_date ?? null,
+        source,
+        sourceName,
+        now,
+        now,
+      ),
+    )
+    for (const labelId of data.label_ids) {
+      statements.push(
+        c.env.DB.prepare(
+          `INSERT INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES (?, ?)`,
+        ).bind(id, labelId),
+      )
+    }
+    issues.push({
+      id,
+      project_id: data.project_id,
+      title,
+      body: null,
+      body_r2_key: null,
+      status: data.status,
+      priority: data.priority,
+      due_date: data.due_date ?? null,
+      external_ref: null,
+      source,
+      source_name: sourceName,
+      labels,
+      created_at: now,
+      updated_at: now,
+      archived_at: null,
+    })
+  }
+
+  await c.env.DB.batch(statements)
+
+  return ok(c, { issues }, { httpStatus: 201 })
+})
+
+// -----------------------------------------------------------------------------
+// PATCH /bulk  — shared patch across N issues (status/priority/due_date/project_id)
+//
+// Body columns (per-item body / label associations) are intentionally excluded:
+// - `body` has R2 overflow semantics that require per-item work
+// - `label_ids` needs add/remove/replace semantics — see POST /bulk/labels
+// -----------------------------------------------------------------------------
+app.patch('/bulk', async (c) => {
+  let json: unknown
+  try {
+    json = await c.req.json()
+  } catch {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const parsed = bulkUpdateIssueBodySchema.safeParse(json)
+  if (!parsed.success) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const { ids, patch } = parsed.data
+  const uniqueIds = Array.from(new Set(ids))
+
+  // Existence check: all requested ids must resolve to real rows.
+  const idPlaceholders = uniqueIds.map(() => '?').join(',')
+  const foundRs = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.issues} WHERE id IN (${idPlaceholders})`,
+  )
+    .bind(...uniqueIds)
+    .all<{ id: string }>()
+  const foundIds = new Set((foundRs.results ?? []).map((r) => r.id))
+  if (foundIds.size !== uniqueIds.length) {
+    const missing = uniqueIds.filter((id) => !foundIds.has(id))
+    return err(c, ErrorCodes.NOT_FOUND, `未找到 issue: ${missing.join(', ')}`)
+  }
+
+  // project_id target must exist too, when changing.
+  if (patch.project_id !== undefined) {
+    const projectRow = await c.env.DB.prepare(
+      `SELECT id FROM ${TABLES.projects} WHERE id = ?`,
+    )
+      .bind(patch.project_id)
+      .first<{ id: string }>()
+    if (!projectRow) {
+      return err(c, ErrorCodes.NOT_FOUND, '项目不存在')
+    }
+  }
+
+  const sets: string[] = []
+  const binds: unknown[] = []
+  const now = nowIso()
+
+  if (patch.status !== undefined) {
+    sets.push('status = ?')
+    binds.push(patch.status)
+    sets.push('archived_at = ?')
+    binds.push(patch.status === 'archived' ? now : null)
+  }
+  if (patch.priority !== undefined) {
+    sets.push('priority = ?')
+    binds.push(patch.priority)
+  }
+  if (patch.due_date !== undefined) {
+    sets.push('due_date = ?')
+    binds.push(patch.due_date ?? null)
+  }
+  if (patch.project_id !== undefined) {
+    sets.push('project_id = ?')
+    binds.push(patch.project_id)
+  }
+  sets.push('updated_at = ?')
+  binds.push(now)
+
+  await c.env.DB.prepare(
+    `UPDATE ${TABLES.issues} SET ${sets.join(', ')} WHERE id IN (${idPlaceholders})`,
+  )
+    .bind(...binds, ...uniqueIds)
+    .run()
+
+  return ok(c, { ids: uniqueIds, patch, updated_at: now })
+})
+
+// -----------------------------------------------------------------------------
+// POST /bulk/labels  — attach/detach labels across N issues
+//
+// mode:
+//   - add:     INSERT OR IGNORE — no-op for pairs already present
+//   - remove:  DELETE WHERE (issue_id, label_id) IN cartesian(ids, label_ids)
+//   - replace: DELETE all label assocs on the target issues, then re-insert
+//              exactly the provided label_ids (final state == label_ids)
+// -----------------------------------------------------------------------------
+app.post('/bulk/labels', async (c) => {
+  let json: unknown
+  try {
+    json = await c.req.json()
+  } catch {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const parsed = bulkIssueLabelsBodySchema.safeParse(json)
+  if (!parsed.success) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const { ids, label_ids, mode } = parsed.data
+  const uniqueIds = Array.from(new Set(ids))
+  const uniqueLabelIds = Array.from(new Set(label_ids))
+
+  const idPlaceholders = uniqueIds.map(() => '?').join(',')
+  const foundIssuesRs = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.issues} WHERE id IN (${idPlaceholders})`,
+  )
+    .bind(...uniqueIds)
+    .all<{ id: string }>()
+  const foundIssueIds = new Set((foundIssuesRs.results ?? []).map((r) => r.id))
+  if (foundIssueIds.size !== uniqueIds.length) {
+    const missing = uniqueIds.filter((id) => !foundIssueIds.has(id))
+    return err(c, ErrorCodes.NOT_FOUND, `未找到 issue: ${missing.join(', ')}`)
+  }
+
+  const labelPlaceholders =
+    uniqueLabelIds.length > 0 ? uniqueLabelIds.map(() => '?').join(',') : ''
+
+  // Label-existence check is only meaningful for the modes that INSERT a
+  // (issue_id, label_id) row (FK-checked at write time). `remove` is
+  // idempotent — a since-deleted label id has no row to strip (FK CASCADE
+  // handled that), so a round-trip 404 here just blocks otherwise valid
+  // batches.
+  if ((mode === 'add' || mode === 'replace') && uniqueLabelIds.length > 0) {
+    const foundLabelsRs = await c.env.DB.prepare(
+      `SELECT id FROM ${TABLES.labels} WHERE id IN (${labelPlaceholders})`,
+    )
+      .bind(...uniqueLabelIds)
+      .all<{ id: string }>()
+    const foundLabelIds = new Set(
+      (foundLabelsRs.results ?? []).map((r) => r.id),
+    )
+    if (foundLabelIds.size !== uniqueLabelIds.length) {
+      const missing = uniqueLabelIds.filter((id) => !foundLabelIds.has(id))
+      return err(c, ErrorCodes.NOT_FOUND, `标签不存在: ${missing.join(', ')}`)
+    }
+  }
+
+  const now = nowIso()
+  const statements: D1PreparedStatement[] = []
+
+  if (mode === 'replace') {
+    statements.push(
+      c.env.DB.prepare(
+        `DELETE FROM ${TABLES.issueLabels} WHERE issue_id IN (${idPlaceholders})`,
+      ).bind(...uniqueIds),
+    )
+  } else if (mode === 'remove') {
+    statements.push(
+      c.env.DB.prepare(
+        `DELETE FROM ${TABLES.issueLabels}
+          WHERE issue_id IN (${idPlaceholders})
+            AND label_id IN (${labelPlaceholders})`,
+      ).bind(...uniqueIds, ...uniqueLabelIds),
+    )
+  }
+
+  if (mode === 'add' || mode === 'replace') {
+    // Pack (issue, label) pairs into multi-row VALUES clauses. D1 caps each
+    // statement at 100 bound parameters; with 2 params per row that's up to
+    // 50 pairs per INSERT. Worst case (100 issues × 10 labels = 1000 pairs)
+    // becomes 20 INSERTs instead of 1000 — well under any per-batch ceiling.
+    // `OR IGNORE` keeps `add` idempotent and covers the race where `replace`
+    // re-inserts a pair the same batch's DELETE just cleared.
+    const PAIRS_PER_STATEMENT = 50
+    const pairs: Array<[string, string]> = []
+    for (const issueId of uniqueIds) {
+      for (const labelId of uniqueLabelIds) {
+        pairs.push([issueId, labelId])
+      }
+    }
+    for (let i = 0; i < pairs.length; i += PAIRS_PER_STATEMENT) {
+      const chunk = pairs.slice(i, i + PAIRS_PER_STATEMENT)
+      const values = chunk.map(() => '(?, ?)').join(', ')
+      const binds = chunk.flat()
+      statements.push(
+        c.env.DB.prepare(
+          `INSERT OR IGNORE INTO ${TABLES.issueLabels} (issue_id, label_id) VALUES ${values}`,
+        ).bind(...binds),
+      )
+    }
+  }
+
+  // Bump updated_at on every touched issue so cache invalidation is honest.
+  statements.push(
+    c.env.DB.prepare(
+      `UPDATE ${TABLES.issues} SET updated_at = ? WHERE id IN (${idPlaceholders})`,
+    ).bind(now, ...uniqueIds),
+  )
+
+  await c.env.DB.batch(statements)
+
+  return ok(c, {
+    ids: uniqueIds,
+    mode,
+    label_ids: uniqueLabelIds,
+    updated_at: now,
+  })
+})
+
+// -----------------------------------------------------------------------------
+// DELETE /bulk  — batch delete. Body: { ids: string[] }.
+//
+// R2 body objects are swept for every row that carried one. FK ON DELETE
+// CASCADE handles comments + issue_labels.
+// -----------------------------------------------------------------------------
+app.delete('/bulk', async (c) => {
+  let json: unknown
+  try {
+    json = await c.req.json()
+  } catch {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const parsed = bulkDeleteIssueBodySchema.safeParse(json)
+  if (!parsed.success) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      ErrorMessages[ErrorCodes.VALIDATION_FAILED],
+    )
+  }
+  const uniqueIds = Array.from(new Set(parsed.data.ids))
+  const idPlaceholders = uniqueIds.map(() => '?').join(',')
+
+  const foundRs = await c.env.DB.prepare(
+    `SELECT id, body_r2_key FROM ${TABLES.issues} WHERE id IN (${idPlaceholders})`,
+  )
+    .bind(...uniqueIds)
+    .all<{ id: string; body_r2_key: string | null }>()
+  const rows = foundRs.results ?? []
+  if (rows.length !== uniqueIds.length) {
+    const foundSet = new Set(rows.map((r) => r.id))
+    const missing = uniqueIds.filter((id) => !foundSet.has(id))
+    return err(c, ErrorCodes.NOT_FOUND, `未找到 issue: ${missing.join(', ')}`)
+  }
+
+  await c.env.DB.prepare(
+    `DELETE FROM ${TABLES.issues} WHERE id IN (${idPlaceholders})`,
+  )
+    .bind(...uniqueIds)
+    .run()
+
+  // R2 sweep after DB commit — D1 delete already succeeded; whatever slips
+  // through is R2 garbage, not an orphaned pointer. Use allSettled so a
+  // transient R2 failure doesn't surface as a 500 on rows that are already
+  // gone (which would prompt clients to retry and receive 404).
+  const r2Keys = rows
+    .map((r) => r.body_r2_key)
+    .filter((k): k is string => k !== null)
+  if (r2Keys.length > 0) {
+    const settled = await Promise.allSettled(
+      r2Keys.map((key) => deleteBodyFromR2(c.env.R2, key)),
+    )
+    const failed = settled.filter((s) => s.status === 'rejected').length
+    if (failed > 0) {
+      console.warn(
+        `[issues bulk delete] R2 sweep left ${failed}/${r2Keys.length} orphaned object(s)`,
+      )
+    }
+  }
+
+  return ok(c, { ids: uniqueIds, deleted: rows.length })
 })
 
 // -----------------------------------------------------------------------------
