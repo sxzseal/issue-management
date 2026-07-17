@@ -10,7 +10,7 @@
     "worker:dev": "wrangler dev --port 8787",
     "worker:deploy": "wrangler deploy",
     "worker:types": "wrangler types",
-    "db:local:init": "wrangler d1 execute issue_management --local --file=migrations/0001_init.sql",
+    "db:local:init": "wrangler d1 migrations apply issue_management --local",
     "db:local:seed": "wrangler d1 execute issue_management --local --file=migrations/0002_seed.sql",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -26,7 +26,13 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test --pass-with-no-tests",
     "test:e2e:ui": "playwright test --ui",
-    "msw:init": "msw init public/ --save"
+    "msw:init": "msw init public/ --save",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx,css}": "prettier --write",
+    "api/**/*.ts": "prettier --write",
+    "tests/**/*.{ts,tsx}": "prettier --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
@@ -86,7 +92,9 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "eslint-plugin-storybook": "^10.4.6",
     "globals": "^17.7.0",
+    "husky": "^9.1.7",
     "jsdom": "^25.0.0",
+    "lint-staged": "^17.0.8",
     "msw": "^2.7.0",
     "msw-storybook-addon": "^2.0.0",
     "postcss": "^8.4.0",
