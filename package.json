@@ -12,6 +12,7 @@
     "worker:types": "wrangler types",
     "db:local:init": "wrangler d1 migrations apply issue_management --local",
     "db:local:seed": "wrangler d1 execute issue_management --local --file=migrations/0002_seed.sql",
+    "db:remote:init": "wrangler d1 migrations apply issue_management --remote",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p api/tsconfig.json",
