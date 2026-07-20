@@ -37,10 +37,10 @@ import {
 } from '../mutations'
 
 import { AttributePanel } from './attribute-panel'
-import { BodyMarkdown } from './body-markdown'
 import { BreadcrumbActions } from './breadcrumb-actions'
 import { CommentComposer } from './comment-composer'
 import { CommentsList } from './comments-list'
+import { InlineEditableBody } from './inline-editable-body'
 import { InlineEditableTitle } from './inline-editable-title'
 import { NotFound } from './not-found'
 
@@ -167,7 +167,15 @@ export function IssueDetailView() {
                 />
                 <MetaRow issue={issue} />
               </div>
-              <BodyMarkdown>{issue.body_full}</BodyMarkdown>
+              <InlineEditableBody
+                issueId={issue.id}
+                value={issue.body_full}
+                onSave={(body) =>
+                  updateIssue
+                    .mutateAsync({ id: issue.id, body: { body } })
+                    .then(() => undefined)
+                }
+              />
               <section>
                 <div className="mb-3 flex items-center gap-2">
                   <h2 className="text-sm font-semibold">

@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { useProjectsById } from '@/features/projects/queries'
 import { useDeleteIssueMutation } from '../mutations'
 import {
   PRIORITY_CLASS,
@@ -98,6 +99,8 @@ export const IssueTableRow = memo(function IssueTableRow({
 }: IssueTableRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const deleteMutation = useDeleteIssueMutation()
+  const projects = useProjectsById()
+  const project = projects.get(issue.project_id)
 
   // formatRelative is pure over updated_at; memoize so the string doesn't churn
   // when the row re-renders for reasons unrelated to updated_at (e.g. sibling
@@ -175,10 +178,14 @@ export const IssueTableRow = memo(function IssueTableRow({
           <div className="flex min-w-0 items-center gap-1.5">
             <span
               aria-hidden
-              className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/60"
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{
+                backgroundColor:
+                  project?.color ?? 'hsl(var(--muted-foreground) / 0.6)',
+              }}
             />
             <span className="truncate text-xs text-muted-foreground">
-              {issue.project_id}
+              {project?.name ?? issue.project_id}
             </span>
           </div>
         </TableCell>

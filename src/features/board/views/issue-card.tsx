@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { Issue, IssuePriority } from '@/lib/api-types'
+import { useProjectsById } from '@/features/projects/queries'
 import { makeIssueDetailLocationState } from '@/features/issue-detail/lib/return-target'
 
 // Priority chips consume the `--priority-p0..p3` HSL tokens from globals.css
@@ -74,6 +75,8 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
   const today = todayIso()
   const overdue = issue.due_date ? isOverdue(issue.due_date, today) : false
   const isDueToday = issue.due_date ? isToday(issue.due_date, today) : false
+  const projects = useProjectsById()
+  const project = projects.get(issue.project_id)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -155,9 +158,13 @@ export function IssueCard({ issue, onOpenStatus }: IssueCardProps) {
         <span className="inline-flex min-w-0 max-w-[8rem] items-center gap-1 text-[11px] text-muted-foreground">
           <span
             aria-hidden
-            className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40"
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{
+              backgroundColor:
+                project?.color ?? 'hsl(var(--muted-foreground) / 0.4)',
+            }}
           />
-          <span className="truncate">{issue.project_id}</span>
+          <span className="truncate">{project?.name ?? issue.project_id}</span>
         </span>
 
         {shownLabels.map((label) => (

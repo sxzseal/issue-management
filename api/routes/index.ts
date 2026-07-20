@@ -9,6 +9,7 @@ import labelRoutes from './labels'
 import issueRoutes from './issues'
 import commentRoutes from './comments'
 import apiTokenRoutes from './api-tokens'
+import attachmentRoutes from './attachments'
 
 export function mountApiRoutes(): Hono<{ Bindings: Env }> {
   const api = new Hono<{ Bindings: Env }>()
@@ -31,6 +32,7 @@ export function mountApiRoutes(): Hono<{ Bindings: Env }> {
   api.route('/labels', labelRoutes)
   api.route('/issues', issueRoutes)
   api.route('/', commentRoutes)
+  api.route('/attachments', attachmentRoutes)
   api.route('/settings/api-tokens', apiTokenRoutes)
 
   return api

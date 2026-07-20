@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { request } from '@/lib/request'
-import type { IssueDetail, Comment, Label } from '@/lib/api-types'
+import type { IssueDetail, Comment, Label, Attachment } from '@/lib/api-types'
 import type { UpdateIssueBody } from '@/lib/validators/issue'
 import type { CreateCommentBody } from '@/lib/validators/comment'
+import { MAX_ATTACHMENT_BYTES } from '@/lib/validators/attachment'
 import type { CommentsData } from './types'
 
 /**
@@ -171,5 +172,49 @@ export function useDeleteCommentMutation() {
       toast.success('评论已删除')
     },
     onError: () => toast.error('删除评论失败'),
+  })
+}
+
+/**
+ * POST /api/issues/:issueId/attachments — multipart upload.
+ * Client-side size guard mirrors the server so we can toast before the round-trip.
+ * Not optimistic — the caller (paste/drop hook, file picker) inserts a
+ * placeholder token into the textarea and swaps it once the mutation resolves.
+ */
+export function useUploadAttachmentMutation() {
+  return useMutation({
+    mutationFn: async (payload: {
+      issueId: string
+      file: File
+    }): Promise<Attachment> => {
+      if (payload.file.size > MAX_ATTACHMENT_BYTES) {
+        throw new Error(
+          `文件超过 ${Math.floor(MAX_ATTACHMENT_BYTES / (1024 * 1024))} MB`,
+        )
+      }
+      const form = new FormData()
+      form.set('file', payload.file, payload.file.name)
+      return request<Attachment>(`/api/issues/${payload.issueId}/attachments`, {
+        method: 'POST',
+        body: form,
+      })
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : '附件上传失败')
+    },
+  })
+}
+
+/**
+ * DELETE /api/attachments/:id — used from future UI. Kept as a public export
+ * so callers can revoke an uploaded attachment (e.g. when the parent draft is
+ * cancelled). The server sweep handles orphans automatically on issue delete.
+ */
+export function useDeleteAttachmentMutation() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      request<null>(`/api/attachments/${id}`, { method: 'DELETE' }),
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : '删除附件失败'),
   })
 }

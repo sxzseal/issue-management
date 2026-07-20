@@ -72,6 +72,22 @@ export interface Comment {
 }
 
 /**
+ * Uploaded attachment (image or file). `url` is a Worker-served relative
+ * path — the frontend must fetch it with the Bearer token; `<AuthedImg>`
+ * turns the response into a blob URL for rendering.
+ */
+export interface Attachment {
+  id: string
+  issue_id: string
+  filename: string
+  mime: string
+  size_bytes: number
+  uploaded_at: string
+  /** Relative path served by the Worker, e.g. `/api/attachments/at_xxx`. */
+  url: string
+}
+
+/**
  * API token — long-lived bearer credential for external AI / script clients.
  * `revoked_at` is null while active; soft-delete keeps a paper trail so past
  * `last_used_at` and provenance stay visible in the settings UI.

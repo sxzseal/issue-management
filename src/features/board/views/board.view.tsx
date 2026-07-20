@@ -3,14 +3,22 @@
  * Composes header, 4 status columns, quick-create modal, and status select sheet.
  * Global `N` key opens the create modal (AC-011).
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Check, ChevronDown, Plus } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ErrorState, Loading } from '@/features/_shared/state'
+import { projectsQueryOptions } from '@/features/projects/queries'
+import { cn } from '@/lib/utils'
 import type { Issue, IssueStatus } from '@/lib/api-types'
 
 import { boardQueries } from '../queries'
@@ -29,10 +37,16 @@ interface StatusSheetState {
 }
 
 export function BoardView() {
-  const { data, isPending, isError, refetch } = useQuery(
-    boardQueries.overview(),
-  )
   const [searchParams, setSearchParams] = useSearchParams()
+  const projectId = searchParams.get('project_id') ?? undefined
+  const { data, isPending, isError, refetch } = useQuery(
+    boardQueries.overview({ project_id: projectId }),
+  )
+  const { data: projects } = useQuery(projectsQueryOptions)
+  const activeProject = useMemo(
+    () => projects?.find((p) => p.id === projectId),
+    [projects, projectId],
+  )
   const [creating, setCreating] = useState<CreatingState>({ open: false })
   const [statusSheet, setStatusSheet] = useState<StatusSheetState>({
     open: false,
@@ -82,15 +96,92 @@ export function BoardView() {
     setStatusSheet((prev) => (open ? { ...prev, open: true } : { open: false }))
   }
 
+  const setProject = (id: string | undefined) => {
+    const next = new URLSearchParams(searchParams)
+    if (id) next.set('project_id', id)
+    else next.delete('project_id')
+    setSearchParams(next, { replace: true })
+  }
+
+  const projectLabel = activeProject
+    ? `项目：${activeProject.name}`
+    : '全部项目'
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <header className="flex flex-none items-center justify-between border-b border-border px-6 py-3">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-none items-center justify-between gap-3 border-b border-border px-6 py-3">
+        <div className="flex min-w-0 items-center gap-3">
           <h1 className="text-lg font-semibold">issue总览</h1>
           {data ? (
             <Badge variant="outline" className="h-6 gap-1 font-normal">
               共 {data.total} 条
             </Badge>
+          ) : null}
+          {projects && projects.length > 0 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    'h-8 gap-1.5',
+                    activeProject &&
+                      'border-primary/60 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary',
+                  )}
+                  aria-label="按项目筛选"
+                >
+                  {activeProject ? (
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: activeProject.color }}
+                    />
+                  ) : null}
+                  <span className="max-w-[10rem] truncate">{projectLabel}</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-[12rem]">
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setProject(undefined)
+                  }}
+                  className="justify-between"
+                >
+                  <span>全部项目</span>
+                  {!activeProject ? (
+                    <Check className="h-4 w-4 shrink-0" aria-hidden />
+                  ) : null}
+                </DropdownMenuItem>
+                {projects.map((p) => {
+                  const selected = projectId === p.id
+                  return (
+                    <DropdownMenuItem
+                      key={p.id}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        setProject(selected ? undefined : p.id)
+                      }}
+                      className="justify-between"
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span
+                          aria-hidden
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        <span className="truncate">{p.name}</span>
+                      </span>
+                      {selected ? (
+                        <Check className="h-4 w-4 shrink-0" aria-hidden />
+                      ) : null}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
         </div>
         <Button onClick={() => setCreating({ open: true })}>

@@ -81,6 +81,19 @@ export interface CommentRow {
 }
 
 // -----------------------------------------------------------------------------
+// attachments
+// -----------------------------------------------------------------------------
+export interface AttachmentRow {
+  id: string
+  issue_id: string
+  r2_key: string
+  filename: string
+  size_bytes: number
+  mime: string
+  uploaded_at: string
+}
+
+// -----------------------------------------------------------------------------
 // api_tokens
 // -----------------------------------------------------------------------------
 export interface ApiTokenRow {

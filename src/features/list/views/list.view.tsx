@@ -7,7 +7,6 @@
  */
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
 import { EmptyState, ErrorState, SkeletonList } from '@/features/_shared/state'
 import { Pagination } from '@/features/_shared/page'
 import { CreateIssueModal } from '@/features/board/views/dialogs/create-issue.modal'
@@ -37,15 +36,7 @@ export function ListView() {
         ) : isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : data && data.list.length === 0 ? (
-          <EmptyState
-            title="没有匹配的 issue"
-            description="试试调整筛选条件或清除全部"
-            action={
-              <Button variant="outline" size="sm" onClick={actions.clear}>
-                清除全部筛选
-              </Button>
-            }
-          />
+          <EmptyState title="没有匹配的 issue" description="试试调整筛选条件" />
         ) : data ? (
           <>
             <IssueTable

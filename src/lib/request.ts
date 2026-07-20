@@ -95,10 +95,13 @@ export async function request<T>(
   const mergedHeaders: Record<string, string> = {
     ...(headers as Record<string, string> | undefined),
   }
-  // Only send Content-Type on bodies — bodyless requests can stay CORS-safe
-  // (avoids a preflight against the vite proxy in dev).
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+  // Only send Content-Type on JSON bodies — bodyless requests can stay CORS-safe
+  // (avoids a preflight against the vite proxy in dev). FormData must not carry
+  // an explicit Content-Type so the browser can inject its multipart boundary.
   if (
     body !== undefined &&
+    !isFormData &&
     !('Content-Type' in mergedHeaders) &&
     !('content-type' in mergedHeaders)
   ) {
@@ -117,7 +120,11 @@ export async function request<T>(
     headers: mergedHeaders,
   }
   if (body !== undefined) {
-    init.body = typeof body === 'string' ? body : JSON.stringify(body)
+    init.body = isFormData
+      ? (body as FormData)
+      : typeof body === 'string'
+        ? body
+        : JSON.stringify(body)
   }
 
   const response = await fetch(buildURL(path, query, baseURL), init)

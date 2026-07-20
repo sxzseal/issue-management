@@ -14,7 +14,8 @@
  *   via outbound links from the app.
  * - Strict-Transport-Security — force HTTPS for 1y on the API origin.
  * - Content-Security-Policy — strict self-only; extend `img-src` to `data:`
- *   for inline SVG lucide icons and future avatar fallbacks.
+ *   for inline SVG lucide icons and future avatar fallbacks, and to `blob:` so
+ *   `<AuthedImg>` can render authenticated attachments via `URL.createObjectURL`.
  * - frame-ancestors 'none' — redundant with XFO for modern browsers but keeps
  *   old ones covered.
  */
@@ -25,7 +26,7 @@ const CSP =
   "default-src 'self'; " +
   "script-src 'self'; " +
   "connect-src 'self'; " +
-  "img-src 'self' data:; " +
+  "img-src 'self' data: blob:; " +
   "style-src 'self' 'unsafe-inline'; " +
   "font-src 'self' data:; " +
   "frame-ancestors 'none'; " +

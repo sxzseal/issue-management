@@ -18,10 +18,12 @@ export const PRIORITY_LABEL: Record<IssuePriority, string> = {
 }
 
 export const STATUS_CLASS: Record<IssueStatus, string> = {
-  todo: 'border-muted-foreground/30 text-muted-foreground',
-  in_progress: 'border-primary/60 text-primary bg-primary/10',
-  done: 'border-accent-foreground/30 text-muted-foreground',
-  archived: 'border-muted-foreground/20 text-muted-foreground/70',
+  todo: 'border-[hsl(var(--status-todo)/0.5)] bg-[hsl(var(--status-todo)/0.1)] text-[hsl(var(--status-todo))]',
+  in_progress:
+    'border-[hsl(var(--status-in-progress)/0.5)] bg-[hsl(var(--status-in-progress)/0.1)] text-[hsl(var(--status-in-progress))]',
+  done: 'border-[hsl(var(--status-done)/0.5)] bg-[hsl(var(--status-done)/0.1)] text-[hsl(var(--status-done))]',
+  archived:
+    'border-[hsl(var(--status-archived)/0.5)] bg-[hsl(var(--status-archived)/0.1)] text-[hsl(var(--status-archived))]',
 }
 
 export const PRIORITY_CLASS: Record<IssuePriority, string> = {

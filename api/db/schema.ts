@@ -11,6 +11,7 @@ export const TABLES = {
   issueLabels: 'issue_labels',
   comments: 'comments',
   apiTokens: 'api_tokens',
+  attachments: 'attachments',
 } as const
 
 export type TableName = (typeof TABLES)[keyof typeof TABLES]

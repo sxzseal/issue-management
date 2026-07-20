@@ -131,4 +131,46 @@
   label {
     white-space: nowrap;
   }
+
+  /* 全局去除按钮/输入类元素点击、聚焦后的描边(focus ring / outline)。
+     覆盖 shadcn/ui 组件里 Tailwind 的 focus-visible:ring-* 与 focus:ring-*。 */
+  button:focus,
+  button:focus-visible,
+  [role='button']:focus,
+  [role='button']:focus-visible,
+  [role='menuitem']:focus,
+  [role='menuitem']:focus-visible,
+  [role='menuitemcheckbox']:focus,
+  [role='menuitemcheckbox']:focus-visible,
+  [role='menuitemradio']:focus,
+  [role='menuitemradio']:focus-visible,
+  [role='option']:focus,
+  [role='option']:focus-visible,
+  [role='tab']:focus,
+  [role='tab']:focus-visible,
+  [role='checkbox']:focus,
+  [role='checkbox']:focus-visible,
+  [role='radio']:focus,
+  [role='radio']:focus-visible,
+  [role='switch']:focus,
+  [role='switch']:focus-visible,
+  [role='combobox']:focus,
+  [role='combobox']:focus-visible,
+  input:focus,
+  input:focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  select:focus,
+  select:focus-visible,
+  a:focus,
+  a:focus-visible,
+  summary:focus,
+  summary:focus-visible,
+  [tabindex]:focus,
+  [tabindex]:focus-visible {
+    outline: none !important;
+    box-shadow: var(--tw-shadow, 0 0 #0000) !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+  }
 }

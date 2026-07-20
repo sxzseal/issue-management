@@ -20,9 +20,22 @@ import {
   shouldOverflow,
   writeBodyToR2,
 } from '../lib/r2-body'
+import {
+  MAX_ATTACHMENT_BYTES,
+  attachmentR2Key,
+  attachmentUrl,
+  generateAttachmentId,
+  sanitizeStoredMime,
+  sweepIssueAttachments,
+} from '../lib/attachments'
 import { TABLES } from '../db/schema'
-import type { IssueRow, LabelRow } from '../db/types'
-import type { Issue, IssueDetail, Label } from '../../src/lib/api-types'
+import type { IssueRow, LabelRow, AttachmentRow } from '../db/types'
+import type {
+  Issue,
+  IssueDetail,
+  Label,
+  Attachment,
+} from '../../src/lib/api-types'
 import { ErrorCodes, ErrorMessages } from '../../src/lib/error-codes'
 import {
   bulkCreateIssueBodySchema,
@@ -792,6 +805,17 @@ app.delete('/bulk', async (c) => {
     }
   }
 
+  // Attachment sweep per deleted issue — parallel, best-effort.
+  const swept = await Promise.allSettled(
+    uniqueIds.map((id) => sweepIssueAttachments(c.env.R2, id)),
+  )
+  const sweptFailed = swept.filter((s) => s.status === 'rejected').length
+  if (sweptFailed > 0) {
+    console.warn(
+      `[issues bulk delete] attachment sweep failed for ${sweptFailed}/${uniqueIds.length} issue(s)`,
+    )
+  }
+
   return ok(c, { ids: uniqueIds, deleted: rows.length })
 })
 
@@ -1058,7 +1082,8 @@ app.delete('/:id', async (c) => {
     return err(c, ErrorCodes.NOT_FOUND, ErrorMessages[ErrorCodes.NOT_FOUND])
   }
 
-  // FK ON DELETE CASCADE handles comments + issue_labels.
+  // FK ON DELETE CASCADE handles comments + issue_labels + attachments rows.
+  // R2 sweep for the body + any attachment blobs is our responsibility.
   if (existing.body_r2_key) {
     await deleteBodyFromR2(c.env.R2, existing.body_r2_key)
   }
@@ -1066,7 +1091,135 @@ app.delete('/:id', async (c) => {
     .bind(id)
     .run()
 
+  // Sweep after the DB commit — anything left is R2 garbage, not an orphan pointer.
+  await sweepIssueAttachments(c.env.R2, id).catch((e) => {
+    console.warn('[issues delete] attachment sweep failed:', e)
+  })
+
   return noContent(c)
+})
+
+// ---------------------------------------------------------------------------
+// POST /:id/attachments — upload one file (multipart/form-data, field "file")
+// GET  /:id/attachments — list all attachments on an issue, newest first
+// ---------------------------------------------------------------------------
+function rowToAttachment(r: AttachmentRow): Attachment {
+  return {
+    id: r.id,
+    issue_id: r.issue_id,
+    filename: r.filename,
+    mime: r.mime,
+    size_bytes: r.size_bytes,
+    uploaded_at: r.uploaded_at,
+    url: attachmentUrl(r.id),
+  }
+}
+
+app.post('/:id/attachments', async (c) => {
+  const issueId = c.req.param('id')
+
+  const issueRow = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.issues} WHERE id = ?`,
+  )
+    .bind(issueId)
+    .first<{ id: string }>()
+  if (!issueRow) {
+    return err(c, ErrorCodes.NOT_FOUND, 'issue 不存在')
+  }
+
+  // Cheap pre-check via Content-Length. Real bytes are counted after read too
+  // (client can lie about the header — we still bail before writing to R2).
+  const contentLength = Number(c.req.header('content-length') ?? '0')
+  if (contentLength > MAX_ATTACHMENT_BYTES) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      `文件大小超过限制（最大 ${Math.floor(MAX_ATTACHMENT_BYTES / (1024 * 1024))} MB）`,
+    )
+  }
+
+  let form: FormData
+  try {
+    form = await c.req.formData()
+  } catch {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      '请求体必须为 multipart/form-data',
+    )
+  }
+  const file = form.get('file')
+  if (!(file instanceof File)) {
+    return err(c, ErrorCodes.VALIDATION_FAILED, '缺少 file 字段')
+  }
+  if (file.size === 0) {
+    return err(c, ErrorCodes.VALIDATION_FAILED, '文件为空')
+  }
+  if (file.size > MAX_ATTACHMENT_BYTES) {
+    return err(
+      c,
+      ErrorCodes.VALIDATION_FAILED,
+      `文件大小超过限制（最大 ${Math.floor(MAX_ATTACHMENT_BYTES / (1024 * 1024))} MB）`,
+    )
+  }
+
+  const filename = (file.name || 'file').slice(0, 255)
+  const mime = sanitizeStoredMime(file.type)
+  const id = generateAttachmentId()
+  const r2_key = attachmentR2Key(issueId, id)
+  const uploaded_at = new Date().toISOString()
+
+  const buffer = await file.arrayBuffer()
+  await c.env.R2.put(r2_key, buffer, {
+    httpMetadata: { contentType: mime },
+  })
+
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO ${TABLES.attachments}
+       (id, issue_id, r2_key, filename, size_bytes, mime, uploaded_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(id, issueId, r2_key, filename, file.size, mime, uploaded_at)
+      .run()
+  } catch (e) {
+    // Roll back the R2 write if the row insert fails so we don't leak a blob.
+    await c.env.R2.delete(r2_key).catch(() => {})
+    throw e
+  }
+
+  const attachment: Attachment = {
+    id,
+    issue_id: issueId,
+    filename,
+    mime,
+    size_bytes: file.size,
+    uploaded_at,
+    url: attachmentUrl(id),
+  }
+  return ok(c, attachment, { httpStatus: 201 })
+})
+
+app.get('/:id/attachments', async (c) => {
+  const issueId = c.req.param('id')
+  const issueRow = await c.env.DB.prepare(
+    `SELECT id FROM ${TABLES.issues} WHERE id = ?`,
+  )
+    .bind(issueId)
+    .first<{ id: string }>()
+  if (!issueRow) {
+    return err(c, ErrorCodes.NOT_FOUND, 'issue 不存在')
+  }
+  const rs = await c.env.DB.prepare(
+    `SELECT * FROM ${TABLES.attachments}
+     WHERE issue_id = ? ORDER BY uploaded_at DESC`,
+  )
+    .bind(issueId)
+    .all<AttachmentRow>()
+  return ok(c, {
+    list: (rs.results ?? []).map(rowToAttachment),
+    total: rs.results?.length ?? 0,
+  })
 })
 
 export default app

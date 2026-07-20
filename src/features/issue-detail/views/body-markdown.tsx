@@ -2,11 +2,17 @@
  * BodyMarkdown — render an issue body_full or comment body as GFM markdown.
  *
  * AC-054 / AC-307: prose typography, whitespace preserved via wrapper spacing.
+ *
+ * Images in the markdown are routed through <AuthedImg> so `/api/attachments/…`
+ * URLs (which need a Bearer token the browser won't attach to <img>) load via
+ * an authenticated fetch → blob URL; external images render as usual.
  */
 import { memo } from 'react'
+import type { ComponentProps } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
+import { AuthedImg } from './authed-img'
 
 interface BodyMarkdownProps {
   children: string
@@ -54,8 +60,27 @@ function BodyMarkdownImpl({
         className,
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{ img: MarkdownImg }}
+      >
+        {text}
+      </ReactMarkdown>
     </article>
+  )
+}
+
+/** Adapter: ReactMarkdown passes `src` as string | undefined; we require string. */
+function MarkdownImg(props: ComponentProps<'img'>) {
+  const { src, alt, title, className } = props
+  if (typeof src !== 'string' || src.length === 0) return null
+  return (
+    <AuthedImg
+      src={src}
+      alt={typeof alt === 'string' ? alt : undefined}
+      title={typeof title === 'string' ? title : undefined}
+      className={typeof className === 'string' ? className : undefined}
+    />
   )
 }
 
