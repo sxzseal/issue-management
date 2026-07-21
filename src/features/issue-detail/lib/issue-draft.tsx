@@ -10,10 +10,11 @@
  *   - `dirty` is true iff at least one draft field truly differs from remote.
  *     Toggling a field back to its remote value auto-removes it from draft
  *     (patchX comparators handle it).
- *   - Unsaved-changes guard: `useBlocker` intercepts client-side navigation
- *     while dirty; `beforeunload` catches the browser close case.
- *   - Cancel discards silently if not dirty, otherwise opens the same confirm
- *     dialog (so the user can't lose keystrokes by an accidental Esc / X).
+ *   - Unsaved-changes guard: `beforeunload` covers browser close/reload. SPA
+ *     internal navigation currently cannot be intercepted because the app
+ *     uses declarative `<BrowserRouter>` — `useBlocker` requires a data
+ *     router. Cancel confirms via <EditModeActions>. Migrating to a data
+ *     router (and wiring `useBlocker`) is out of scope here.
  *   - `commit()` reuses `useUpdateIssueMutation` (optimistic + rollback), so
  *     the cache patching / label resolution / list+board invalidations stay
  *     centralized in one place.
@@ -27,18 +28,8 @@ import {
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
-import { useBlocker } from 'react-router'
 import { useQuery, queryOptions } from '@tanstack/react-query'
 
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { request } from '@/lib/request'
 import type {
   IssueDetail,
@@ -207,19 +198,8 @@ export function IssueDraftProvider({
       .filter((l): l is Label => l !== undefined)
   }, [draft.label_ids, issue.labels, allLabels])
 
-  // Nav guard: block client-side navigation while there are unsaved edits.
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      dirty &&
-      (currentLocation.pathname !== nextLocation.pathname ||
-        currentLocation.search !== nextLocation.search),
-  )
-  const [confirmOpen, setConfirmOpen] = useState<boolean>(false)
-  useEffect(() => {
-    if (blocker.state === 'blocked') setConfirmOpen(true)
-  }, [blocker.state])
-
-  // Browser tab close / reload — soft warning only (browsers ignore custom text).
+  // Nav guard: `beforeunload` covers tab close / reload; SPA internal nav is
+  // not intercepted (needs a data router — see the file-level doc).
   useEffect(() => {
     if (!dirty) return
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -273,43 +253,9 @@ export function IssueDraftProvider({
     ],
   )
 
-  const handleStay = () => {
-    setConfirmOpen(false)
-    blocker.reset?.()
-  }
-  const handleLeave = () => {
-    setConfirmOpen(false)
-    setDraft({})
-    setMode('view')
-    blocker.proceed?.()
-  }
-
   return (
     <IssueDraftContext.Provider value={value}>
       {children}
-      <Dialog
-        open={confirmOpen}
-        onOpenChange={(next) => {
-          if (!next) handleStay()
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>丢弃未保存的修改?</DialogTitle>
-            <DialogDescription>
-              离开此页面会丢失当前的编辑内容。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleStay}>
-              继续编辑
-            </Button>
-            <Button variant="destructive" onClick={handleLeave}>
-              丢弃改动
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </IssueDraftContext.Provider>
   )
 }
