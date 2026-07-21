@@ -145,17 +145,11 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
 
   const statusCount = params.status?.length ?? 0
   const priorityCount = params.priority?.length ?? 0
-  const activeProject = projects?.find((p) => p.id === params.project_id)
+  const hasProjectContext = Boolean(params.project_id)
 
   const hasActiveFilter =
-    Boolean(params.project_id) ||
-    statusCount > 0 ||
-    priorityCount > 0 ||
-    Boolean(params.q)
+    statusCount > 0 || priorityCount > 0 || Boolean(params.q)
 
-  const setProject = (id: string | undefined) => {
-    actions.setFilter({ project_id: id, page: 1 })
-  }
   const toggleStatus = (s: IssueStatus) => {
     const next = toggleArray(params.status, s)
     actions.setFilter({ status: next.length ? next : undefined, page: 1 })
@@ -166,10 +160,16 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
   }
   const handleClearAll = () => {
     setLocalQ('')
-    actions.clear()
+    actions.setFilter({
+      status: undefined,
+      priority: undefined,
+      labels: undefined,
+      due_from: undefined,
+      due_to: undefined,
+      q: undefined,
+      page: 1,
+    })
   }
-
-  const projectLabel = activeProject ? `项目：${activeProject.name}` : '项目'
 
   return (
     <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border bg-background px-6 py-3">
@@ -188,53 +188,35 @@ export function FilterBar({ params, actions, onCreateIssue }: FilterBarProps) {
         />
       </div>
 
-      {projects && projects.length > 0 && (
+      {!hasProjectContext && projects && projects.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <FilterTrigger
-              label={projectLabel}
-              hasValue={Boolean(activeProject)}
+              label="项目"
+              hasValue={false}
               aria-label="按项目筛选"
             />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[12rem]">
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault()
-                setProject(undefined)
-              }}
-              className="justify-between"
-            >
-              <span>全部项目</span>
-              {!activeProject && (
-                <Check className="h-4 w-4 shrink-0" aria-hidden />
-              )}
-            </DropdownMenuItem>
-            {projects.map((p) => {
-              const selected = params.project_id === p.id
-              return (
-                <DropdownMenuItem
-                  key={p.id}
-                  onSelect={(e) => {
-                    e.preventDefault()
-                    setProject(selected ? undefined : p.id)
-                  }}
-                  className="justify-between"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="truncate">{p.name}</span>
-                  </span>
-                  {selected && (
-                    <Check className="h-4 w-4 shrink-0" aria-hidden />
-                  )}
-                </DropdownMenuItem>
-              )
-            })}
+            {projects.map((p) => (
+              <DropdownMenuItem
+                key={p.id}
+                onSelect={(e) => {
+                  e.preventDefault()
+                  actions.setFilter({ project_id: p.id, page: 1 })
+                }}
+                className="justify-between"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: p.color }}
+                  />
+                  <span className="truncate">{p.name}</span>
+                </span>
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       )}

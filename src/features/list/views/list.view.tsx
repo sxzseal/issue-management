@@ -64,7 +64,11 @@ export function ListView() {
           }
         />
       )}
-      <CreateIssueModal open={creatingOpen} onOpenChange={setCreatingOpen} />
+      <CreateIssueModal
+        open={creatingOpen}
+        onOpenChange={setCreatingOpen}
+        defaultProjectId={params.project_id}
+      />
     </div>
   )
 }

@@ -95,6 +95,7 @@ interface CreateIssueModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultStatus?: IssueStatus
+  defaultProjectId?: string
 }
 
 /**
@@ -120,15 +121,18 @@ export function CreateIssueModal({
   open,
   onOpenChange,
   defaultStatus,
+  defaultProjectId,
 }: CreateIssueModalProps) {
   const projects = useQuery(projectsQueryOptions)
   const labels = useQuery(labelsQueryOptions)
   const mutation = useCreateIssueMutation()
 
+  const initialProjectId = defaultProjectId ?? 'proj_inbox'
+
   const form = useForm<CreateIssueFormInput>({
     resolver: zodResolver(createIssueBodySchema),
     defaultValues: {
-      project_id: 'proj_inbox',
+      project_id: initialProjectId,
       title: '',
       body: '',
       status: defaultStatus ?? 'todo',
@@ -141,7 +145,7 @@ export function CreateIssueModal({
   useEffect(() => {
     if (open) {
       form.reset({
-        project_id: 'proj_inbox',
+        project_id: initialProjectId,
         title: '',
         body: '',
         status: defaultStatus ?? 'todo',
@@ -150,7 +154,7 @@ export function CreateIssueModal({
         due_date: null,
       })
     }
-  }, [open, defaultStatus, form])
+  }, [open, defaultStatus, initialProjectId, form])
 
   const selectedLabels = form.watch('label_ids') ?? []
 
