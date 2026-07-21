@@ -2,15 +2,16 @@
  * IssueDetailView — /issue/:id route body (T025).
  *
  * Layout:
- *   BreadcrumbActions
+ *   BreadcrumbActions (with Edit / Save / Cancel on the right)
  *   ┌────────────── two columns ──────────────┐
  *   │ scroll area (title/meta/body/comments)  │ AttributePanel (hidden lg:block w-80)
  *   │ ─────────── CommentComposer ─────────── │
  *   └─────────────────────────────────────────┘
  *
- * Data:
- *   - `issueDetailQueries.byId(id)` for the top card
- *   - `issueDetailQueries.comments(id)` for the thread
+ * Interaction model (v2):
+ *   All editable widgets read/write a page-level draft via
+ *   `<IssueDraftProvider>`. Nothing PATCHes until the user hits 保存. See
+ *   `lib/issue-draft.tsx` for the full contract.
  *
  * States:
  *   - 404 (RequestError statusCode 40401) → <NotFound />
@@ -30,10 +31,10 @@ import type { IssueDetail } from '@/lib/api-types'
 
 import { issueDetailQueries } from '../queries'
 import { relativeTime } from '../lib/relative-time'
+import { IssueDraftProvider } from '../lib/issue-draft'
 import {
   useCreateCommentMutation,
   useDeleteCommentMutation,
-  useUpdateIssueMutation,
 } from '../mutations'
 
 import { AttributePanel } from './attribute-panel'
@@ -106,7 +107,6 @@ export function IssueDetailView() {
     enabled: issueId.length > 0 && detail.isSuccess,
   })
 
-  const updateIssue = useUpdateIssueMutation()
   const createComment = useCreateCommentMutation()
   const deleteComment = useDeleteCommentMutation()
 
@@ -150,73 +150,60 @@ export function IssueDetailView() {
   const issue = detail.data
 
   return (
-    <TooltipProvider>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden">
-        <BreadcrumbActions issue={issue} />
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-8 py-6">
-              <div>
-                <InlineEditableTitle
-                  value={issue.title}
-                  onSave={(title) =>
-                    updateIssue
-                      .mutateAsync({ id: issue.id, body: { title } })
-                      .then(() => undefined)
-                  }
-                />
-                <MetaRow issue={issue} />
+    <IssueDraftProvider issue={issue}>
+      <TooltipProvider>
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <BreadcrumbActions issue={issue} />
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-8 py-6">
+                <div>
+                  <InlineEditableTitle />
+                  <MetaRow issue={issue} />
+                </div>
+                <InlineEditableBody issueId={issue.id} />
+                <section>
+                  <div className="mb-3 flex items-center gap-2">
+                    <h2 className="text-sm font-semibold">
+                      评论 · {comments.data?.total ?? 0}
+                    </h2>
+                    <Separator className="flex-1" />
+                  </div>
+                  {comments.isPending ? (
+                    <SkeletonList rows={2} />
+                  ) : comments.isError ? (
+                    <ErrorState onRetry={() => void comments.refetch()} />
+                  ) : (
+                    <CommentsList
+                      issueId={issue.id}
+                      comments={comments.data?.list ?? []}
+                      onDelete={(commentId) =>
+                        deleteComment.mutate({ issueId: issue.id, commentId })
+                      }
+                    />
+                  )}
+                </section>
               </div>
-              <InlineEditableBody
+              <CommentComposer
                 issueId={issue.id}
-                value={issue.body_full}
-                onSave={(body) =>
-                  updateIssue
-                    .mutateAsync({ id: issue.id, body: { body } })
+                onSubmit={(body) =>
+                  createComment
+                    .mutateAsync({ issueId: issue.id, body: { body } })
                     .then(() => undefined)
                 }
               />
-              <section>
-                <div className="mb-3 flex items-center gap-2">
-                  <h2 className="text-sm font-semibold">
-                    评论 · {comments.data?.total ?? 0}
-                  </h2>
-                  <Separator className="flex-1" />
-                </div>
-                {comments.isPending ? (
-                  <SkeletonList rows={2} />
-                ) : comments.isError ? (
-                  <ErrorState onRetry={() => void comments.refetch()} />
-                ) : (
-                  <CommentsList
-                    issueId={issue.id}
-                    comments={comments.data?.list ?? []}
-                    onDelete={(commentId) =>
-                      deleteComment.mutate({ issueId: issue.id, commentId })
-                    }
-                  />
-                )}
-              </section>
             </div>
-            <CommentComposer
-              issueId={issue.id}
-              onSubmit={(body) =>
-                createComment
-                  .mutateAsync({ issueId: issue.id, body: { body } })
-                  .then(() => undefined)
-              }
-            />
+            <aside
+              className={cn(
+                'hidden w-80 flex-none flex-col overflow-y-auto lg:flex',
+                'border-l border-border bg-card/30 p-4',
+              )}
+            >
+              <AttributePanel />
+            </aside>
           </div>
-          <aside
-            className={cn(
-              'hidden w-80 flex-none flex-col overflow-y-auto lg:flex',
-              'border-l border-border bg-card/30 p-4',
-            )}
-          >
-            <AttributePanel issue={issue} />
-          </aside>
         </div>
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </IssueDraftProvider>
   )
 }

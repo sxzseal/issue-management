@@ -1,12 +1,12 @@
 /**
  * BreadcrumbActions — top row of the detail view (AC-051).
  *
- * - Left: breadcrumb「项目名 / issue #<id>」
- * - Right: Copy Link · Archive/Unarchive · Delete
+ * - Left: back button + breadcrumb「项目名 / issue #<id>」
+ * - Right (view mode): Copy Link · Archive/Unarchive · Delete · 编辑
+ * - Right (edit mode): Copy Link · 取消 · 保存
  *
- * The Archive button toggles `status` between `archived` and its previous
- * value; for v1 we simply flip archived <-> todo on the way out. Delete opens
- * the confirmation modal.
+ * Archive/Delete are destructive and would race with unsaved draft changes,
+ * so they are hidden while the user is in edit mode — commit or cancel first.
  */
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
@@ -28,7 +28,9 @@ import { projectsQueryOptions } from '@/features/projects/queries'
 
 import { useUpdateIssueMutation } from '../mutations'
 import { getIssueDetailReturnTarget } from '../lib/return-target'
+import { useIssueDraft } from '../lib/issue-draft'
 import { DeleteIssueModal } from './dialogs/delete-issue.modal'
+import { EditModeActions } from './edit-mode-actions'
 
 interface BreadcrumbActionsProps {
   issue: IssueDetail
@@ -42,6 +44,8 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const returnTarget = getIssueDetailReturnTarget(location.state)
+  const { mode } = useIssueDraft()
+  const editing = mode === 'edit'
 
   const project = projects?.find((p) => p.id === issue.project_id)
   const archived = issue.status === 'archived'
@@ -110,36 +114,41 @@ export function BreadcrumbActions({ issue }: BreadcrumbActionsProps) {
             </>
           )}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5"
-          onClick={toggleArchive}
-          disabled={update.isPending}
-          aria-label={archived ? '取消归档' : '归档'}
-        >
-          {archived ? (
-            <>
-              <PackageOpen className="h-3.5 w-3.5" />
-              <span>取消归档</span>
-            </>
-          ) : (
-            <>
-              <Package className="h-3.5 w-3.5" />
-              <span>归档</span>
-            </>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => setDeleteOpen(true)}
-          aria-label="删除"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          <span>删除</span>
-        </Button>
+        {editing ? null : (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5"
+              onClick={toggleArchive}
+              disabled={update.isPending}
+              aria-label={archived ? '取消归档' : '归档'}
+            >
+              {archived ? (
+                <>
+                  <PackageOpen className="h-3.5 w-3.5" />
+                  <span>取消归档</span>
+                </>
+              ) : (
+                <>
+                  <Package className="h-3.5 w-3.5" />
+                  <span>归档</span>
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setDeleteOpen(true)}
+              aria-label="删除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>删除</span>
+            </Button>
+          </>
+        )}
+        <EditModeActions />
       </div>
 
       <DeleteIssueModal
