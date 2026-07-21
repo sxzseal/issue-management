@@ -10,7 +10,7 @@
  * Activity + Attachments cards remain v1 stubs.
  */
 import { useQuery, queryOptions } from '@tanstack/react-query'
-import { Calendar, Paperclip } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,12 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { request } from '@/lib/request'
 import type { IssuePriority, IssueStatus, Label } from '@/lib/api-types'
