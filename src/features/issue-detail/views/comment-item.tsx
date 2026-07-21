@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Comment } from '@/lib/api-types'
 import { relativeTime } from '../lib/relative-time'
+import { BodyMarkdown } from './body-markdown'
 
 interface CommentItemProps {
   comment: Comment
@@ -98,9 +99,9 @@ export function CommentItem({
             </DropdownMenu>
           ) : null}
         </div>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+        <BodyMarkdown className="mt-2" hideEmptyPlaceholder>
           {comment.body}
-        </p>
+        </BodyMarkdown>
       </div>
     </div>
   )
