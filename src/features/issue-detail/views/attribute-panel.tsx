@@ -242,7 +242,7 @@ export function AttributePanel() {
           saving={draft.saving}
         />
 
-        <SideCard title="活动日志">
+        {/* <SideCard title="活动日志">
           <p className="text-xs text-muted-foreground">v1 暂不追踪活动</p>
         </SideCard>
 
@@ -258,7 +258,7 @@ export function AttributePanel() {
               请通过正文的粘贴 / 拖拽 / 回形针上传附件
             </TooltipContent>
           </Tooltip>
-        </SideCard>
+        </SideCard> */}
       </div>
     </TooltipProvider>
   )
